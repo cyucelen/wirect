@@ -19,11 +19,16 @@ type SnifferAPI struct {
 
 func (s *SnifferAPI) CreateSniffer(ctx echo.Context) {
 	sniffer := new(model.Sniffer)
-	if err := ctx.Bind(sniffer); err != nil || sniffer.MAC == "" {
-		ctx.JSON(http.StatusNotFound, struct{}{})
+
+	if err := ctx.Bind(sniffer); err != nil || !isSnifferValid(sniffer) {
+		ctx.JSON(http.StatusNotFound, nil)
 		return
 	}
-	s.DB.CreateSniffer(sniffer)
+
+	if err := s.DB.CreateSniffer(sniffer); err != nil {
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return
+	}
 	ctx.JSON(http.StatusCreated, sniffer)
 }
 
@@ -33,13 +38,18 @@ func (s *SnifferAPI) GetSniffers(ctx echo.Context) {
 
 func (s *SnifferAPI) UpdateSniffer(ctx echo.Context) {
 	sniffer := new(model.Sniffer)
-	if err := ctx.Bind(sniffer); err != nil || sniffer.MAC == "" {
+	if err := ctx.Bind(sniffer); err != nil || !isSnifferValid(sniffer) {
 		ctx.JSON(http.StatusNotFound, nil)
 		return
 	}
+
 	if err := s.DB.UpdateSniffer(sniffer); err != nil {
 		ctx.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 	ctx.JSON(http.StatusOK, nil)
+}
+
+func isSnifferValid(sniffer *model.Sniffer) bool {
+	return sniffer.MAC != ""
 }

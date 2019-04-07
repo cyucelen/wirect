@@ -11,13 +11,13 @@ func (s *DatabaseSuite) TestCreatePacket() {
 	packets := []model.Packet{
 		{
 			MAC:        "00:11:22:33:44:55",
-			Timestamp:  time.Now(),
+			Timestamp:  time.Now().UTC(),
 			RSSI:       1234,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
 		{
 			MAC:        "00:33:22:11:44:55",
-			Timestamp:  time.Now().Add(10 * time.Second),
+			Timestamp:  time.Now().UTC().Add(10 * time.Second),
 			RSSI:       333,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
@@ -43,25 +43,25 @@ func (s *DatabaseSuite) TestGetPacketsBySniffer() {
 	packets := []model.Packet{
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now(),
+			Timestamp:  time.Now().UTC(),
 			RSSI:       123,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
 		{
 			MAC:        "00:11:CC:CC:44:55",
-			Timestamp:  time.Now().Add(5 * time.Second),
+			Timestamp:  time.Now().UTC().Add(5 * time.Second),
 			RSSI:       1234,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now().Add(10 * time.Second),
+			Timestamp:  time.Now().UTC().Add(10 * time.Second),
 			RSSI:       333,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now().Add(20 * time.Second),
+			Timestamp:  time.Now().UTC().Add(20 * time.Second),
 			RSSI:       333,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
@@ -83,7 +83,7 @@ func (s *DatabaseSuite) TestGetPacketsBySnifferSince() {
 	snifferTwo := "00:00:00:00:00:00"
 	createTwoSniffers(s, snifferOne, snifferTwo)
 
-	since := time.Now().Add(10 * time.Minute)
+	since := time.Now().UTC().Add(10 * time.Minute)
 
 	packets := []model.Packet{
 		{
