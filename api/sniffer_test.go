@@ -63,7 +63,7 @@ func TestCreateSnifferWithEmptyJSON(t *testing.T) {
 
 	snifferAPI.CreateSniffer(c)
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	mockSnifferDB.AssertNotCalled(t, "CreateSniffer", &model.Sniffer{})
 }
 
@@ -78,7 +78,7 @@ func TestCreateSnifferWithCorruptedJSON(t *testing.T) {
 
 	snifferAPI.CreateSniffer(c)
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
 func TestCreateSnifferWithFailingDB(t *testing.T) {
@@ -147,7 +147,7 @@ func TestUpdateSnifferWithEmptyJSON(t *testing.T) {
 	err := snifferAPI.UpdateSniffer(c)
 	assert.Nil(t, err)
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	mockSnifferDB.AssertNotCalled(t, "UpdateSniffer", &model.Sniffer{})
 }
 
@@ -163,7 +163,7 @@ func TestUpdateSnifferWithCorruptedJSON(t *testing.T) {
 	err := snifferAPI.UpdateSniffer(c)
 	assert.Nil(t, err)
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
 func TestUpdateWithFailingDBUpdate(t *testing.T) {

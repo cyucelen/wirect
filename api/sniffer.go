@@ -22,7 +22,7 @@ func (s *SnifferAPI) CreateSniffer(ctx echo.Context) error {
 	sniffer := new(model.Sniffer)
 
 	if err := ctx.Bind(sniffer); err != nil || !isSnifferValid(sniffer) {
-		ctx.JSON(http.StatusNotFound, nil)
+		ctx.JSON(http.StatusBadRequest, nil)
 		return err
 	}
 
@@ -42,7 +42,7 @@ func (s *SnifferAPI) GetSniffers(ctx echo.Context) error {
 func (s *SnifferAPI) UpdateSniffer(ctx echo.Context) error {
 	sniffer := new(model.Sniffer)
 	if err := ctx.Bind(sniffer); err != nil || !isSnifferValid(sniffer) {
-		ctx.JSON(http.StatusNotFound, nil)
+		ctx.JSON(http.StatusBadRequest, nil)
 		return nil
 	}
 
