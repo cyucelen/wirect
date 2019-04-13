@@ -41,7 +41,8 @@ func TestCreateSniffer(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.CreateSniffer(c)
+	err := snifferAPI.CreateSniffer(c)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 	assert.Equal(t, string(snifferJSON), strings.TrimRight(rec.Body.String(), "\n"))
@@ -107,7 +108,8 @@ func TestGetSniffers(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB(sniffers)
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.GetSniffers(c)
+	err := snifferAPI.GetSniffers(c)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	var actualSniffers []model.Sniffer
@@ -126,7 +128,8 @@ func TestUpdateSniffer(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.UpdateSniffer(c)
+	err := snifferAPI.UpdateSniffer(c)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	mockSnifferDB.AssertCalled(t, "UpdateSniffer", &snifferUpdate)
@@ -141,7 +144,8 @@ func TestUpdateSnifferWithEmptyJSON(t *testing.T) {
 	mockSnifferDB := &mocks.SnifferDatabase{}
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.UpdateSniffer(c)
+	err := snifferAPI.UpdateSniffer(c)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 	mockSnifferDB.AssertNotCalled(t, "UpdateSniffer", &model.Sniffer{})
@@ -156,7 +160,8 @@ func TestUpdateSnifferWithCorruptedJSON(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.UpdateSniffer(c)
+	err := snifferAPI.UpdateSniffer(c)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
@@ -171,7 +176,8 @@ func TestUpdateWithFailingDBUpdate(t *testing.T) {
 	mockSnifferDB := createFailingMockSnifferDB()
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferAPI.UpdateSniffer(c)
+	err := snifferAPI.UpdateSniffer(c)
+	assert.NotNil(t, err)
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }

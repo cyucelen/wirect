@@ -1,9 +1,11 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 
 	"gitlab.com/wirect/wirect-server/model"
@@ -19,41 +21,28 @@ type PacketAPI struct {
 	DB PacketDatabase
 }
 
-func (p *PacketAPI) CreatePackets(ctx echo.Context) {
-	var snifferPackets []model.SnifferPacket
-
-	if err := ctx.Bind(&snifferPackets); err != nil {
-		ctx.JSON(http.StatusNotFound, "")
-		return
+func (p *PacketAPI) CreatePacket(ctx echo.Context) error {
+	var snifferPacket model.SnifferPacket
+	if err := ctx.Bind(&snifferPacket); err != nil {
+		ffmt.Puts(err)
+		ctx.JSON(http.StatusBadRequest, nil)
+		return err
 	}
 
-	validSnifferPackets := filterValidSnifferPackets(snifferPackets)
-
-	if len(validSnifferPackets) == 0 {
-		ctx.JSON(http.StatusNotFound, nil)
-		return
+	if !isSnifferPacketValid(snifferPacket) {
+		ctx.JSON(http.StatusBadRequest, nil)
+		return errors.New("")
 	}
 
-	for _, validSnifferPacket := range validSnifferPackets {
-		packet := toPacket(&validSnifferPacket)
+	packet := toPacket(&snifferPacket)
 
-		if err := p.DB.CreatePacket(packet); err != nil {
-			ctx.JSON(http.StatusInternalServerError, nil)
-			return
-		}
+	if err := p.DB.CreatePacket(packet); err != nil {
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return err
 	}
 
-	ctx.JSON(http.StatusCreated, snifferPackets)
-}
-
-func filterValidSnifferPackets(snifferPackets []model.SnifferPacket) []model.SnifferPacket {
-	validSnifferPackets := []model.SnifferPacket{}
-	for _, snifferPacket := range snifferPackets {
-		if isSnifferPacketValid(snifferPacket) {
-			validSnifferPackets = append(validSnifferPackets, snifferPacket)
-		}
-	}
-	return validSnifferPackets
+	ctx.JSON(http.StatusCreated, snifferPacket)
+	return nil
 }
 
 func isSnifferPacketValid(snifferPacket model.SnifferPacket) bool {
