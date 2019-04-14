@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/cyucelen/wirect/model"
+	"github.com/stretchr/testify/assert"
 )
 
 type InMemoryDBSuite struct {

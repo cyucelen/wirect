@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/cyucelen/wirect/model"
 	"github.com/cyucelen/wirect/test"
+	testutil "github.com/cyucelen/wirect/test/util"
 )
 
 var client = &http.Client{}
@@ -21,7 +23,6 @@ var client = &http.Client{}
 type IntegrationSuite struct {
 	suite.Suite
 	server *httptest.Server
-	db     *test.InMemoryDB
 }
 
 func TestIntegrationSuite(t *testing.T) {
@@ -29,8 +30,7 @@ func TestIntegrationSuite(t *testing.T) {
 }
 
 func (s *IntegrationSuite) BeforeTest(string, string) {
-	s.db = &test.InMemoryDB{}
-	router := Create(s.db)
+	router := Create(&test.InMemoryDB{})
 	s.server = httptest.NewServer(router)
 }
 
@@ -38,126 +38,67 @@ func (s *IntegrationSuite) AfterTest(string, string) {
 	s.server.Close()
 }
 
-func (s *IntegrationSuite) TestCreatePacket() {
-	body := `
-	{
-		"MAC":"00:11:22:33:44:55",
-		"timestamp":"2019-04-13T12:10:23Z",
-		"RSSI":122.4,
-		"snifferMAC":"FF:FF:FF:FF:AA:AA"
-	}`
-
-	req := s.NewRequest(http.MethodPost, "packet", body)
-
-	res, err := client.Do(req)
-	assert.Nil(s.T(), err)
-
-	var actualResponse model.SnifferPacket
-	json.NewDecoder(res.Body).Decode(&actualResponse)
-
-	var expectedResponse model.SnifferPacket
-	json.NewDecoder(strings.NewReader(body)).Decode(&expectedResponse)
-
-	assert.Equal(s.T(), expectedResponse, actualResponse)
-	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
-}
-
 func (s *IntegrationSuite) TestCreateSniffer() {
-	body := `
-	{
-		"MAC":"00:11:22:33:44:55",
-		"name":"library_sniffer",
-		"location":"library"
-	}
-	`
-	req := s.NewRequest(http.MethodPost, "sniffer", body)
+	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","location":"library"}`
+	s.SendCreateSnifferRequest(snifferPayload)
 
-	res, err := client.Do(req)
-	assert.Nil(s.T(), err)
+	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","location":"room"}`
+	s.SendCreateSnifferRequest(snifferPayload)
 
-	var actualResponse model.Sniffer
-	json.NewDecoder(res.Body).Decode(&actualResponse)
-
-	var expectedResponse model.Sniffer
-	json.NewDecoder(strings.NewReader(body)).Decode(&expectedResponse)
-
-	assert.Equal(s.T(), expectedResponse, actualResponse)
-	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
-}
-
-func (s *IntegrationSuite) TestGetSniffers() {
+	actualSniffers := s.SendGetSniffersRequest()
 	expectedSniffers := []model.Sniffer{
-		{
-			MAC:      "01:01:01:01:01:01",
-			Name:     "lib_sniffer",
-			Location: "library",
-		},
-		{
-			MAC:      "02:02:02:02:02:02",
-			Name:     "room_sniffer",
-			Location: "room",
-		},
+		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Location: "library"},
+		{MAC: "02:02:02:02:02:02", Name: "room_sniffer", Location: "room"},
 	}
-	s.createSniffers(expectedSniffers)
-
-	req := s.NewRequest(http.MethodGet, "sniffer", "")
-	res, err := client.Do(req)
-	assert.Nil(s.T(), err)
-
-	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
-
-	var actualSniffers []model.Sniffer
-	json.NewDecoder(res.Body).Decode(&actualSniffers)
 
 	assert.Equal(s.T(), expectedSniffers, actualSniffers)
 }
 
 func (s *IntegrationSuite) TestUpdateSniffer() {
-	sniffers := []model.Sniffer{
-		{
-			MAC:      "01:01:01:01:01:01",
-			Name:     "lib_sniffer",
-			Location: "library",
-		},
-		{
-			MAC:      "02:02:02:02:02:02",
-			Name:     "room_sniffer",
-			Location: "room",
-		},
-	}
-	s.createSniffers(sniffers)
+	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","location":"library"}`
+	s.SendCreateSnifferRequest(snifferPayload)
+
+	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","location":"room"}`
+	s.SendCreateSnifferRequest(snifferPayload)
 
 	newName := "copy_center_sniffer"
 	newLocation := "copy_center"
+	bodyTemplate := `{"MAC":"02:02:02:02:02:02","name":"%s","location":"%s"}`
+	s.SendUpdateSnifferRequest(fmt.Sprintf(bodyTemplate, newName, newLocation))
 
-	bodyTemplate := `
-		{
-			"MAC":"02:02:02:02:02:02",
-			"name":"%s",
-			"location":"%s"
-		}
-	`
-
-	req := s.NewRequest(http.MethodPut, "sniffer", fmt.Sprintf(bodyTemplate, newName, newLocation))
-	res, err := client.Do(req)
-	assert.Nil(s.T(), err)
-
-	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
-
-	expectedSniffers := make([]model.Sniffer, len(sniffers))
-	copy(expectedSniffers, sniffers)
-	expectedSniffers[1].Name = newName
-	expectedSniffers[1].Location = newLocation
-
-	actualSniffers := s.db.Sniffers
+	actualSniffers := s.SendGetSniffersRequest()
+	expectedSniffers := []model.Sniffer{
+		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Location: "library"},
+		{MAC: "02:02:02:02:02:02", Name: newName, Location: newLocation},
+	}
 
 	assert.Equal(s.T(), expectedSniffers, actualSniffers)
 }
 
-func (s *IntegrationSuite) createSniffers(sniffers []model.Sniffer) {
-	for _, sniffer := range sniffers {
-		s.db.CreateSniffer(&sniffer)
+func (s *IntegrationSuite) TestGetCrowd() {
+	snifferMAC := "01:01:01:01:01:01"
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	s.SendCreateSnifferRequest(snifferPayload)
+
+	now := time.Now()
+
+	packets := []model.Packet{
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now, RSSI: 1.2, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(5 * time.Second), RSSI: 1.2232, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(7 * time.Second), RSSI: 333, SnifferMAC: snifferMAC},
+		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(10 * time.Second), RSSI: 44, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(15 * time.Second), RSSI: 23.4, SnifferMAC: snifferMAC},
 	}
+
+	for _, packet := range packets {
+		packetJSON, _ := json.Marshal(packet)
+		s.SendCreatePacketRequest(string(packetJSON))
+	}
+
+	actualCrowd := s.SendGetCrowdRequest(now, snifferMAC)
+	expectedCrowd := 2
+
+	assert.Equal(s.T(), expectedCrowd, actualCrowd.Count)
 }
 
 func (s *IntegrationSuite) NewRequest(method, resource, body string) *http.Request {
@@ -166,4 +107,65 @@ func (s *IntegrationSuite) NewRequest(method, resource, body string) *http.Reque
 	assert.Nil(s.T(), err)
 
 	return req
+}
+
+func (s *IntegrationSuite) SendRequest(method, endpoint, payload string) *http.Response {
+	req := s.NewRequest(method, endpoint, payload)
+	res, err := client.Do(req)
+	assert.Nil(s.T(), err)
+
+	return res
+}
+
+func (s *IntegrationSuite) SendGetCrowdRequest(since time.Time, snifferMAC string) model.Crowd {
+	req := s.NewRequest(http.MethodGet, "crowd", "")
+	testutil.AddGetCrowdRequestHeaders(req, since, snifferMAC)
+	res, err := client.Do(req)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
+
+	var crowd model.Crowd
+	json.NewDecoder(res.Body).Decode(&crowd)
+
+	return crowd
+}
+
+func (s *IntegrationSuite) SendCreatePacketRequest(payload string) {
+	res := s.SendRequest(http.MethodPost, "packet", payload)
+
+	var actualResponse model.Packet
+	json.NewDecoder(res.Body).Decode(&actualResponse)
+
+	var expectedResponse model.Packet
+	json.NewDecoder(strings.NewReader(payload)).Decode(&expectedResponse)
+
+	assert.Equal(s.T(), expectedResponse, actualResponse)
+	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
+}
+
+func (s *IntegrationSuite) SendGetSniffersRequest() []model.Sniffer {
+	res := s.SendRequest(http.MethodGet, "sniffer", "")
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
+
+	var sniffers []model.Sniffer
+	json.NewDecoder(res.Body).Decode(&sniffers)
+
+	return sniffers
+}
+
+func (s *IntegrationSuite) SendCreateSnifferRequest(payload string) {
+	res := s.SendRequest(http.MethodPost, "sniffer", payload)
+
+	var actualResponse model.Sniffer
+	json.NewDecoder(res.Body).Decode(&actualResponse)
+	var expectedResponse model.Sniffer
+	json.NewDecoder(strings.NewReader(payload)).Decode(&expectedResponse)
+	assert.Equal(s.T(), expectedResponse, actualResponse)
+
+	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
+}
+
+func (s *IntegrationSuite) SendUpdateSnifferRequest(payload string) {
+	res := s.SendRequest(http.MethodPut, "sniffer", payload)
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
 }

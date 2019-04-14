@@ -17,6 +17,10 @@ func Create(db Database) *echo.Echo {
 	e := echo.New()
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
+
+	crowdAPI := &api.CrowdAPI{DB: db}
+
+	e.GET("/crowd", crowdAPI.GetCrowd)
 	return e
 }
 

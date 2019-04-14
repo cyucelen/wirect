@@ -12,14 +12,14 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/cyucelen/wirect/api/mocks"
 	"github.com/cyucelen/wirect/model"
+	"github.com/cyucelen/wirect/test"
+	"github.com/stretchr/testify/assert"
 )
 
-func createMockPacketDB() *mocks.PacketDatabase {
-	mockPacketDB := &mocks.PacketDatabase{}
-	mockPacketDB.On("CreatePacket", mock.AnythingOfType("*model.Packet")).Return(nil)
+func createMockPacketDB() *test.InMemoryDB {
+	mockPacketDB := &test.InMemoryDB{}
 
 	return mockPacketDB
 }
@@ -52,7 +52,7 @@ func TestCreatePacket(t *testing.T) {
 
 	expectedPacket := *toPacket(&snifferPacket)
 
-	assert.True(t, assert.ObjectsAreEqual(expectedPacket, mockPacketDB.CreatedPackets[0]))
+	assert.True(t, assert.ObjectsAreEqual(expectedPacket, mockPacketDB.Packets[0]))
 }
 
 func TestCreatePacketsWithEmptyRequiredFields(t *testing.T) {
