@@ -1,5 +1,10 @@
+<h1 align="center">Wirect</h1>
+
 <p align="center">
-  <img width="100%" src="logo.png">
+  <img height="400px" src="logo.png">
+</p>
+
+<p align="center">
   <a href="https://travis-ci.org/cyucelen/wirect">
     <img src="https://travis-ci.org/cyucelen/wirect.svg?branch=master" />
   </a>
