@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/wirect/wirect-server/api/mocks"
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/api/mocks"
+	"github.com/cyucelen/wirect/model"
 )
 
 func createMockPacketDB() *mocks.PacketDatabase {

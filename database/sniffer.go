@@ -1,6 +1,6 @@
 package database
 
-import "gitlab.com/wirect/wirect-server/model"
+import "github.com/cyucelen/wirect/model"
 
 func (g *GormDatabase) CreateSniffer(sniffer *model.Sniffer) error {
 	return g.DB.Create(sniffer).Error

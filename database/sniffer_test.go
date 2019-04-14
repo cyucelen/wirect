@@ -2,7 +2,7 @@ package database
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/model"
 )
 
 func (s *DatabaseSuite) TestCreateSniffer() {

@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/model"
 )
 
 func (g *GormDatabase) CreatePacket(packet *model.Packet) error {

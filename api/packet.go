@@ -8,7 +8,7 @@ import (
 	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/model"
 )
 
 type PacketDatabase interface {

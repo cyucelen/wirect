@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/model"
 )
 
 func (s *DatabaseSuite) TestCreatePacket() {

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"gitlab.com/wirect/wirect-server/model"
+	"github.com/cyucelen/wirect/model"
 )
 
 type InMemoryDB struct {

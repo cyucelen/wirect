@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gitlab.com/wirect/wirect-server/model"
-	"gitlab.com/wirect/wirect-server/test"
+	"github.com/cyucelen/wirect/model"
+	"github.com/cyucelen/wirect/test"
 )
 
 var client = &http.Client{}

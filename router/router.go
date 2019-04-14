@@ -1,8 +1,8 @@
 package router
 
 import (
+	"github.com/cyucelen/wirect/api"
 	"github.com/labstack/echo"
-	"gitlab.com/wirect/wirect-server/api"
 )
 
 type Database interface {
