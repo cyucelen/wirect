@@ -11,10 +11,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"gitlab.com/wirect/wirect-server/model"
-	"gitlab.com/wirect/wirect-server/router/mocks"
+	"gitlab.com/wirect/wirect-server/test"
 )
 
 var client = &http.Client{}
@@ -22,7 +21,7 @@ var client = &http.Client{}
 type IntegrationSuite struct {
 	suite.Suite
 	server *httptest.Server
-	db     *mocks.Database
+	db     *test.InMemoryDB
 }
 
 func TestIntegrationSuite(t *testing.T) {
@@ -30,13 +29,8 @@ func TestIntegrationSuite(t *testing.T) {
 }
 
 func (s *IntegrationSuite) BeforeTest(string, string) {
-	mockDB := &mocks.Database{}
-	mockDB.On("CreatePacket", mock.AnythingOfType("*model.Packet")).Return(nil)
-	mockDB.On("CreateSniffer", mock.AnythingOfType("*model.Sniffer")).Return(nil)
-	mockDB.On("UpdateSniffer", mock.AnythingOfType("*model.Sniffer")).Return(nil)
-
-	s.db = mockDB
-	router := Create(mockDB)
+	s.db = &test.InMemoryDB{}
+	router := Create(s.db)
 	s.server = httptest.NewServer(router)
 }
 
@@ -164,7 +158,6 @@ func (s *IntegrationSuite) createSniffers(sniffers []model.Sniffer) {
 	for _, sniffer := range sniffers {
 		s.db.CreateSniffer(&sniffer)
 	}
-	s.db.On("GetSniffers").Return(s.db.Sniffers)
 }
 
 func (s *IntegrationSuite) NewRequest(method, resource, body string) *http.Request {
