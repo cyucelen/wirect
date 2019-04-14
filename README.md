@@ -1,7 +1,7 @@
 <h1 align="center">Wirect</h1>
 
 <p align="center">
-  <img height="400px" src="logo.png">
+  <img height="300px" src="logo.png">
 </p>
 
 <p align="center">
