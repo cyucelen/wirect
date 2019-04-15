@@ -11,6 +11,10 @@
   <a href="https://codecov.io/gh/cyucelen/wirect">
     <img src="https://codecov.io/gh/cyucelen/wirect/branch/master/graph/badge.svg" />
   </a>
+  <a href="https://codecov.io/gh/cyucelen/wirect">
+    <img src="https://goreportcard.com/badge/github.com/cyucelen/wirect" />
+  </a>
+  <img src="https://img.shields.io/github/license/cyucelen/wirect.svg">
 </p>
 
 # WiFi Realtime Crowd Tracker
