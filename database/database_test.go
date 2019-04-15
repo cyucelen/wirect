@@ -7,9 +7,9 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
+	"github.com/cyucelen/wirect/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/cyucelen/wirect/model"
 )
 
 type DatabaseSuite struct {

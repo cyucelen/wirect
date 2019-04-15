@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jinzhu/gorm"
 	"github.com/cyucelen/wirect/model"
+	"github.com/jinzhu/gorm"
 )
 
 // GormDatabase is a wrapper for the gorm framework

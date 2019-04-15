@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/cyucelen/wirect/api/mocks"
 	"github.com/cyucelen/wirect/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func createMockSnifferDB(sniffers []model.Sniffer) *mocks.SnifferDatabase {

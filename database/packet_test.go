@@ -3,8 +3,8 @@ package database
 import (
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/cyucelen/wirect/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func (s *DatabaseSuite) TestCreatePacket() {

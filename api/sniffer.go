@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/labstack/echo"
 	"github.com/cyucelen/wirect/model"
+	"github.com/labstack/echo"
 )
 
 type SnifferDatabase interface {
