@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,10 @@ type DatabaseSuite struct {
 	suite.Suite
 	db         *GormDatabase
 	testDBPath string
+}
+
+func failingMkdirAll(path string, perm os.FileMode) error {
+	return errors.New("")
 }
 
 func TestDatabaseSuite(t *testing.T) {
@@ -46,4 +51,16 @@ func TestInvalidDialect(t *testing.T) {
 
 	_, err := New("what is this dialect", path, true)
 	assert.Error(t, err)
+}
+
+func TestMkdirError(t *testing.T) {
+	path := "./testDBs/test.db0"
+	mkdirAllFunc = failingMkdirAll
+
+	createNewDBFunc := func() {
+		New("sqlite3", path, true)
+	}
+
+	assert.Panics(t, createNewDBFunc)
+
 }

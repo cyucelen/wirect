@@ -8,6 +8,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var mkdirAllFunc = os.MkdirAll
+
 // GormDatabase is a wrapper for the gorm framework
 type GormDatabase struct {
 	DB *gorm.DB
@@ -42,7 +44,7 @@ func (d *GormDatabase) Close() {
 func createDirectoryIfSqlite(dialect string, connection string) {
 	if dialect == "sqlite3" {
 		if _, err := os.Stat(filepath.Dir(connection)); os.IsNotExist(err) {
-			if err := os.MkdirAll(filepath.Dir(connection), 0777); err != nil {
+			if err := mkdirAllFunc(filepath.Dir(connection), 0777); err != nil {
 				panic(err)
 			}
 		}

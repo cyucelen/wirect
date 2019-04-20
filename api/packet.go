@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 
 	"github.com/cyucelen/wirect/model"
@@ -24,7 +23,6 @@ type PacketAPI struct {
 func (p *PacketAPI) CreatePacket(ctx echo.Context) error {
 	var snifferPacket model.SnifferPacket
 	if err := ctx.Bind(&snifferPacket); err != nil {
-		ffmt.Puts(err)
 		ctx.JSON(http.StatusBadRequest, nil)
 		return err
 	}
