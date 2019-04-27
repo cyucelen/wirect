@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-	"time"
+	"strconv"
 
 	"github.com/cyucelen/wirect/model"
 	"github.com/labstack/echo"
@@ -18,11 +18,10 @@ type CrowdAPI struct {
 
 func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
 	snifferMAC := ctx.QueryParam("sniffer")
-	since := ctx.QueryParam("since")
 
-	sinceTime, _ := time.Parse(since, time.RFC3339)
+	since, _ := strconv.ParseInt(ctx.QueryParam("since"), 10, 64)
 
-	packets := c.DB.GetPacketsBySnifferSince(snifferMAC, sinceTime)
+	packets := c.DB.GetPacketsBySnifferSince(snifferMAC, since)
 	crowd := model.Crowd{Count: getUniquePersonCount(packets)}
 
 	ctx.JSON(http.StatusOK, crowd)

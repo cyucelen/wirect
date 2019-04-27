@@ -11,13 +11,13 @@ func (s *DatabaseSuite) TestCreatePacket() {
 	packets := []model.Packet{
 		{
 			MAC:        "00:11:22:33:44:55",
-			Timestamp:  time.Now().UTC(),
+			Timestamp:  time.Now().UTC().Unix(),
 			RSSI:       1234,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
 		{
 			MAC:        "00:33:22:11:44:55",
-			Timestamp:  time.Now().UTC().Add(10 * time.Second),
+			Timestamp:  time.Now().UTC().Add(10 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
@@ -43,25 +43,25 @@ func (s *DatabaseSuite) TestGetPacketsBySniffer() {
 	packets := []model.Packet{
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now().UTC(),
+			Timestamp:  time.Now().UTC().Unix(),
 			RSSI:       123,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
 		{
 			MAC:        "00:11:CC:CC:44:55",
-			Timestamp:  time.Now().UTC().Add(5 * time.Second),
+			Timestamp:  time.Now().UTC().Add(5 * time.Second).Unix(),
 			RSSI:       1234,
 			SnifferMAC: "00:00:00:00:00:00",
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now().UTC().Add(10 * time.Second),
+			Timestamp:  time.Now().UTC().Add(10 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  time.Now().UTC().Add(20 * time.Second),
+			Timestamp:  time.Now().UTC().Add(20 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: "01:02:03:04:05:06",
 		},
@@ -73,9 +73,9 @@ func (s *DatabaseSuite) TestGetPacketsBySniffer() {
 	snifferPackets := s.db.GetPacketsBySniffer("01:02:03:04:05:06")
 
 	assert.Len(s.T(), snifferPackets, 3)
-	assert.Equal(s.T(), packets[0].Timestamp.Unix(), snifferPackets[0].Timestamp.Unix())
-	assert.Equal(s.T(), packets[2].Timestamp.Unix(), snifferPackets[1].Timestamp.Unix())
-	assert.Equal(s.T(), packets[3].Timestamp.Unix(), snifferPackets[2].Timestamp.Unix())
+	assert.Equal(s.T(), packets[0].Timestamp, snifferPackets[0].Timestamp)
+	assert.Equal(s.T(), packets[2].Timestamp, snifferPackets[1].Timestamp)
+	assert.Equal(s.T(), packets[3].Timestamp, snifferPackets[2].Timestamp)
 }
 
 func (s *DatabaseSuite) TestGetPacketsBySnifferSince() {
@@ -88,31 +88,31 @@ func (s *DatabaseSuite) TestGetPacketsBySnifferSince() {
 	packets := []model.Packet{
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(-10 * time.Minute),
+			Timestamp:  since.Add(-10 * time.Minute).Unix(),
 			RSSI:       123,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(1 * time.Second),
+			Timestamp:  since.Add(1 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "00:11:CC:CC:44:55",
-			Timestamp:  since.Add(-5 * time.Minute),
+			Timestamp:  since.Add(-5 * time.Minute).Unix(),
 			RSSI:       1234,
 			SnifferMAC: snifferTwo,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since,
+			Timestamp:  since.Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(5 * time.Minute),
+			Timestamp:  since.Add(5 * time.Minute).Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
@@ -121,12 +121,12 @@ func (s *DatabaseSuite) TestGetPacketsBySnifferSince() {
 		s.db.CreatePacket(&packet)
 	}
 
-	snifferPacketsSince := s.db.GetPacketsBySnifferSince(snifferOne, since)
+	snifferPacketsSince := s.db.GetPacketsBySnifferSince(snifferOne, since.Unix())
 
 	assert.Len(s.T(), snifferPacketsSince, 3)
-	assert.Equal(s.T(), packets[3].Timestamp.Unix(), snifferPacketsSince[0].Timestamp.Unix())
-	assert.Equal(s.T(), packets[1].Timestamp.Unix(), snifferPacketsSince[1].Timestamp.Unix())
-	assert.Equal(s.T(), packets[4].Timestamp.Unix(), snifferPacketsSince[2].Timestamp.Unix())
+	assert.Equal(s.T(), packets[3].Timestamp, snifferPacketsSince[0].Timestamp)
+	assert.Equal(s.T(), packets[1].Timestamp, snifferPacketsSince[1].Timestamp)
+	assert.Equal(s.T(), packets[4].Timestamp, snifferPacketsSince[2].Timestamp)
 }
 
 func createTwoSniffers(s *DatabaseSuite, s1, s2 string) []model.Sniffer {

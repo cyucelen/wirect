@@ -28,7 +28,7 @@ func (s *InMemoryDBSuite) TestCreatePacket() {
 		MAC:        "00:00:11:11:22:22",
 		RSSI:       1.23,
 		SnifferMAC: "AA:AA:AA:BB:CC:DD",
-		Timestamp:  time.Now(),
+		Timestamp:  time.Now().Unix(),
 	}
 
 	s.db.CreatePacket(&expectedPacket)
@@ -46,19 +46,19 @@ func (s *InMemoryDBSuite) TestGetPacketsBySniffer() {
 			MAC:        "00:00:11:11:22:22",
 			RSSI:       1.23,
 			SnifferMAC: snifferMAC,
-			Timestamp:  time.Now(),
+			Timestamp:  time.Now().Unix(),
 		},
 		{
 			MAC:        "22:22:12:11:22:22",
 			RSSI:       1.23,
 			SnifferMAC: snifferMAC,
-			Timestamp:  time.Now(),
+			Timestamp:  time.Now().Unix(),
 		},
 		{
 			MAC:        "00:00:11:11:22:22",
 			RSSI:       1.23,
 			SnifferMAC: "11:11:11:11:11:11",
-			Timestamp:  time.Now(),
+			Timestamp:  time.Now().Unix(),
 		},
 	}
 
@@ -81,31 +81,31 @@ func (s *InMemoryDBSuite) TestGetPacketsBySnifferSince() {
 	packets := []model.Packet{
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(-10 * time.Minute),
+			Timestamp:  since.Add(-10 * time.Minute).Unix(),
 			RSSI:       123,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(1 * time.Second),
+			Timestamp:  since.Add(1 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "00:11:CC:CC:44:55",
-			Timestamp:  since.Add(-5 * time.Minute),
+			Timestamp:  since.Add(-5 * time.Minute).Unix(),
 			RSSI:       1234,
 			SnifferMAC: snifferTwo,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since,
+			Timestamp:  since.Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  since.Add(5 * time.Minute),
+			Timestamp:  since.Add(5 * time.Minute).Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferOne,
 		},
@@ -114,12 +114,12 @@ func (s *InMemoryDBSuite) TestGetPacketsBySnifferSince() {
 		s.db.CreatePacket(&packet)
 	}
 
-	snifferPacketsSince := s.db.GetPacketsBySnifferSince(snifferOne, since)
+	snifferPacketsSince := s.db.GetPacketsBySnifferSince(snifferOne, since.Unix())
 
 	assert.Len(s.T(), snifferPacketsSince, 3)
-	assert.Equal(s.T(), packets[3].Timestamp.Unix(), snifferPacketsSince[0].Timestamp.Unix())
-	assert.Equal(s.T(), packets[1].Timestamp.Unix(), snifferPacketsSince[1].Timestamp.Unix())
-	assert.Equal(s.T(), packets[4].Timestamp.Unix(), snifferPacketsSince[2].Timestamp.Unix())
+	assert.Equal(s.T(), packets[3].Timestamp, snifferPacketsSince[0].Timestamp)
+	assert.Equal(s.T(), packets[1].Timestamp, snifferPacketsSince[1].Timestamp)
+	assert.Equal(s.T(), packets[4].Timestamp, snifferPacketsSince[2].Timestamp)
 }
 
 func (s *InMemoryDBSuite) TestCreateSniffer() {

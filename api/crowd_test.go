@@ -40,31 +40,31 @@ func createDBContainsPacketsOfTwoUniquePerson(now time.Time, snifferMAC string) 
 	packets := []model.Packet{
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  now,
+			Timestamp:  now.Unix(),
 			RSSI:       1.2,
 			SnifferMAC: snifferMAC,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  now.Add(5 * time.Second),
+			Timestamp:  now.Add(5 * time.Second).Unix(),
 			RSSI:       1.2232,
 			SnifferMAC: snifferMAC,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  now.Add(7 * time.Second),
+			Timestamp:  now.Add(7 * time.Second).Unix(),
 			RSSI:       333,
 			SnifferMAC: snifferMAC,
 		},
 		{
 			MAC:        "00:11:CC:CC:44:55",
-			Timestamp:  now.Add(10 * time.Second),
+			Timestamp:  now.Add(10 * time.Second).Unix(),
 			RSSI:       44,
 			SnifferMAC: snifferMAC,
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  now.Add(15 * time.Second),
+			Timestamp:  now.Add(15 * time.Second).Unix(),
 			RSSI:       23.4,
 			SnifferMAC: snifferMAC,
 		},

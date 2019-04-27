@@ -82,11 +82,11 @@ func (s *IntegrationSuite) TestGetCrowd() {
 
 	now := time.Now()
 	packets := []model.Packet{
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second), RSSI: 23.4, SnifferMAC: snifferMAC},
-		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second), RSSI: 44, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-7 * time.Second), RSSI: 333, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-5 * time.Second), RSSI: 1.2232, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now, RSSI: 1.2, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second).Unix(), RSSI: 23.4, SnifferMAC: snifferMAC},
+		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second).Unix(), RSSI: 44, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-7 * time.Second).Unix(), RSSI: 333, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-5 * time.Second).Unix(), RSSI: 1.2232, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Unix(), RSSI: 1.2, SnifferMAC: snifferMAC},
 	}
 
 	for _, packet := range packets {
@@ -101,8 +101,8 @@ func (s *IntegrationSuite) TestGetCrowd() {
 
 	now = now.Add(1 * time.Minute)
 	packets = []model.Packet{
-		{MAC: "CC:FF:CC:FF:CC:FF", Timestamp: now.Add(-35 * time.Second), RSSI: 44, SnifferMAC: snifferMAC},
-		{MAC: "DD:CC:DD:CC:DD:CC", Timestamp: now.Add(-25 * time.Second), RSSI: 23.4, SnifferMAC: snifferMAC},
+		{MAC: "CC:FF:CC:FF:CC:FF", Timestamp: now.Add(-35 * time.Second).Unix(), RSSI: 44, SnifferMAC: snifferMAC},
+		{MAC: "DD:CC:DD:CC:DD:CC", Timestamp: now.Add(-25 * time.Second).Unix(), RSSI: 23.4, SnifferMAC: snifferMAC},
 	}
 
 	packetsJSON, _ := json.Marshal(packets)

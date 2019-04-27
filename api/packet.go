@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
@@ -14,7 +13,7 @@ import (
 type PacketDatabase interface {
 	CreatePacket(packet *model.Packet) error
 	GetPacketsBySniffer(snifferMAC string) []model.Packet
-	GetPacketsBySnifferSince(snifferMAC string, since time.Time) []model.Packet
+	GetPacketsBySnifferSince(snifferMAC string, since int64) []model.Packet
 }
 
 type PacketAPI struct {
@@ -85,7 +84,7 @@ func filterValidSnifferPackets(snifferPackets []model.SnifferPacket) []model.Sni
 }
 
 func isSnifferPacketValid(snifferPacket model.SnifferPacket) bool {
-	return snifferPacket.MAC != "" && snifferPacket.SnifferMAC != "" && snifferPacket.Timestamp != time.Time{}
+	return snifferPacket.MAC != "" && snifferPacket.SnifferMAC != "" && snifferPacket.Timestamp != 0
 }
 
 func toPacket(snifferPacket *model.SnifferPacket) *model.Packet {

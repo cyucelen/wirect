@@ -2,7 +2,6 @@ package test
 
 import (
 	"sort"
-	"time"
 
 	"github.com/cyucelen/wirect/model"
 )
@@ -29,11 +28,11 @@ func (i *InMemoryDB) GetPacketsBySniffer(snifferMAC string) []model.Packet {
 	return filteredPackets
 }
 
-func (i *InMemoryDB) GetPacketsBySnifferSince(snifferMAC string, since time.Time) []model.Packet {
+func (i *InMemoryDB) GetPacketsBySnifferSince(snifferMAC string, since int64) []model.Packet {
 	filteredPackets := []model.Packet{}
 
 	for _, packet := range i.Packets {
-		if packet.SnifferMAC == snifferMAC && packet.Timestamp.Sub(since) >= 0 {
+		if packet.SnifferMAC == snifferMAC && packet.Timestamp >= since {
 			filteredPackets = append(filteredPackets, packet)
 		}
 	}
@@ -64,7 +63,7 @@ func sortByPacketsTime(s []model.Packet) []model.Packet {
 	copy(sc, s)
 
 	sort.Slice(sc, func(i int, j int) bool {
-		if s[i].Timestamp.Before(s[j].Timestamp) {
+		if s[i].Timestamp < s[j].Timestamp {
 			return true
 		}
 		return false
