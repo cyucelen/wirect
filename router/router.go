@@ -10,8 +10,8 @@ type Database interface {
 	api.SnifferDatabase
 }
 
-const packetEndpoint = "/packet"
-const snifferEndpoint = "/sniffer"
+const packetEndpoint = "/packets"
+const snifferEndpoint = "/sniffers"
 
 func Create(db Database) *echo.Echo {
 	e := echo.New()

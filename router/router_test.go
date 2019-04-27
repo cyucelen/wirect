@@ -131,7 +131,7 @@ func (s *IntegrationSuite) SendGetCrowdRequest(since time.Time, snifferMAC strin
 }
 
 func (s *IntegrationSuite) SendCreatePacketRequest(payload string) {
-	res := s.SendRequest(http.MethodPost, "packet", payload)
+	res := s.SendRequest(http.MethodPost, "packets", payload)
 
 	var actualResponse model.Packet
 	json.NewDecoder(res.Body).Decode(&actualResponse)
@@ -144,7 +144,7 @@ func (s *IntegrationSuite) SendCreatePacketRequest(payload string) {
 }
 
 func (s *IntegrationSuite) SendGetSniffersRequest() []model.Sniffer {
-	res := s.SendRequest(http.MethodGet, "sniffer", "")
+	res := s.SendRequest(http.MethodGet, "sniffers", "")
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
 
 	var sniffers []model.Sniffer
@@ -154,7 +154,7 @@ func (s *IntegrationSuite) SendGetSniffersRequest() []model.Sniffer {
 }
 
 func (s *IntegrationSuite) SendCreateSnifferRequest(payload string) {
-	res := s.SendRequest(http.MethodPost, "sniffer", payload)
+	res := s.SendRequest(http.MethodPost, "sniffers", payload)
 
 	var actualResponse model.Sniffer
 	json.NewDecoder(res.Body).Decode(&actualResponse)
@@ -166,6 +166,6 @@ func (s *IntegrationSuite) SendCreateSnifferRequest(payload string) {
 }
 
 func (s *IntegrationSuite) SendUpdateSnifferRequest(payload string) {
-	res := s.SendRequest(http.MethodPut, "sniffer", payload)
+	res := s.SendRequest(http.MethodPut, "sniffers", payload)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
 }

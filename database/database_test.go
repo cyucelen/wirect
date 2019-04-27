@@ -62,5 +62,4 @@ func TestMkdirError(t *testing.T) {
 	}
 
 	assert.Panics(t, createNewDBFunc)
-
 }
