@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +25,7 @@ var client = &http.Client{}
 type IntegrationSuite struct {
 	suite.Suite
 	server *httptest.Server
+	clock  clock.Clock
 }
 
 func TestIntegrationSuite(t *testing.T) {
@@ -30,6 +33,10 @@ func TestIntegrationSuite(t *testing.T) {
 }
 
 func (s *IntegrationSuite) BeforeTest(string, string) {
+	mockClock := clock.NewMock()
+	mockClock.Add(12 * time.Hour)
+	s.clock = mockClock
+	tick = mockClock
 	server := Create(&test.InMemoryDB{})
 	s.server = httptest.NewServer(server)
 }
@@ -80,7 +87,7 @@ func (s *IntegrationSuite) TestGetCrowd() {
 	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
-	now := time.Now()
+	now := s.clock.Now()
 	packets := []model.Packet{
 		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second).Unix(), RSSI: 23.4, SnifferMAC: snifferMAC},
 		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second).Unix(), RSSI: 44, SnifferMAC: snifferMAC},
@@ -96,7 +103,6 @@ func (s *IntegrationSuite) TestGetCrowd() {
 
 	actualCrowd := s.sendGetCrowdRequest(now, snifferMAC)
 	expectedCrowd := 2
-
 	assert.Equal(s.T(), expectedCrowd, actualCrowd.Count)
 
 	now = now.Add(1 * time.Minute)
@@ -112,6 +118,12 @@ func (s *IntegrationSuite) TestGetCrowd() {
 	expectedCrowd = 4
 
 	assert.Equal(s.T(), expectedCrowd, actualCrowd.Count)
+}
+
+func (s *IntegrationSuite) TestGetTime() {
+	expectedTime := s.clock.Now().Unix()
+	actualTime := s.sendGetTimeRequest()
+	assert.Equal(s.T(), expectedTime, actualTime.Now)
 }
 
 func (s *IntegrationSuite) newRequest(method, resource, body string) *http.Request {
@@ -130,13 +142,22 @@ func (s *IntegrationSuite) sendRequest(method, endpoint, payload string) *http.R
 	return res
 }
 
+func (s *IntegrationSuite) sendGetTimeRequest() model.Time {
+	res := s.sendRequest(http.MethodGet, "time", "")
+
+	var t model.Time
+	json.NewDecoder(res.Body).Decode(&t)
+
+	return t
+}
+
 func (s *IntegrationSuite) sendGetCrowdRequest(since time.Time, snifferMAC string) model.Crowd {
 	req := s.newRequest(http.MethodGet, "crowd", "")
+
 	testutil.AddGetCrowdRequestHeaders(req, since, snifferMAC)
 	res, err := client.Do(req)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
-
 	var crowd model.Crowd
 	json.NewDecoder(res.Body).Decode(&crowd)
 

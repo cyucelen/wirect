@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 
 	"github.com/cyucelen/wirect/model"
@@ -26,8 +25,6 @@ func (p *PacketAPI) CreatePacket(ctx echo.Context) error {
 		ctx.JSON(http.StatusBadRequest, nil)
 		return err
 	}
-
-	ffmt.Puts(snifferPacket)
 
 	if !isSnifferPacketValid(snifferPacket) {
 		ctx.JSON(http.StatusBadRequest, nil)
