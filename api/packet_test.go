@@ -1,16 +1,14 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cyucelen/wirect/api/mocks"
 	"github.com/cyucelen/wirect/model"
@@ -18,109 +16,145 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type PacketAPISuite struct {
+	suite.Suite
+	packetAPI *PacketAPI
+	packetDB  *test.InMemoryDB
+}
+
+func TestPacketAPISuite(t *testing.T) {
+	suite.Run(t, new(PacketAPISuite))
+}
+
 func createMockPacketDB() *test.InMemoryDB {
 	mockPacketDB := &test.InMemoryDB{}
-
 	return mockPacketDB
 }
 
 func createFailingMockPacketDB() *mocks.PacketDatabase {
 	mockPacketDB := &mocks.PacketDatabase{}
 	mockPacketDB.On("CreatePacket", mock.AnythingOfType("*model.Packet")).Return(errors.New(""))
-
 	return mockPacketDB
 }
 
-func TestCreatePacket(t *testing.T) {
-	now := time.Now().UTC()
-
-	snifferPacket := model.SnifferPacket{
-		MAC: "22:44:66:88:AA:CC", Timestamp: now, RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
-	}
-	snifferPacketJSON, _ := json.Marshal(snifferPacket)
-
-	req := httptest.NewRequest(http.MethodPost, "/packet", bytes.NewReader(snifferPacketJSON))
-	c, rec := createTestContext(req)
-
-	mockPacketDB := createMockPacketDB()
-	packetAPI := PacketAPI{mockPacketDB}
-
-	packetAPI.CreatePacket(c)
-
-	assert.Equal(t, http.StatusCreated, rec.Code)
-	assert.Equal(t, string(snifferPacketJSON), strings.TrimRight(rec.Body.String(), "\n"))
-
-	expectedPacket := *toPacket(&snifferPacket)
-
-	assert.True(t, assert.ObjectsAreEqual(expectedPacket, mockPacketDB.Packets[0]))
+func (s *PacketAPISuite) BeforeTest(string, string) {
+	s.packetDB = createMockPacketDB()
+	s.packetAPI = &PacketAPI{s.packetDB}
 }
 
-func TestCreatePacketsWithEmptyRequiredFields(t *testing.T) {
-	mockPacketDB := createMockPacketDB()
+func (s *PacketAPISuite) TestCreatePacket() {
+	snifferPacket := model.SnifferPacket{
+		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
+	}
 
-	now := time.Now().UTC()
+	rec := sendTestRequestToHandler(snifferPacket, s.packetAPI.CreatePacket)
+	assert.Equal(s.T(), http.StatusCreated, rec.Code)
+
+	var actualSnifferPacket model.SnifferPacket
+	json.NewDecoder(rec.Body).Decode(&actualSnifferPacket)
+	assert.Equal(s.T(), snifferPacket, actualSnifferPacket)
+
+	expectedPacket := *toPacket(&snifferPacket)
+	assert.True(s.T(), assert.ObjectsAreEqual(expectedPacket, s.packetDB.Packets[0]))
+}
+
+func (s *PacketAPISuite) TestCreatePacketWithEmptyRequiredFields() {
 	notValidSnifferPackets := []model.SnifferPacket{
-		{MAC: "", Timestamp: now, RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "01:02:03:04:05:06", Timestamp: now.Add(1 * time.Second), RSSI: 123, SnifferMAC: ""},
+		{MAC: "", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: ""},
 		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
 	}
 
-	packetAPI := PacketAPI{mockPacketDB}
-
 	for _, notValidSnifferPacket := range notValidSnifferPackets {
-		notValidSnifferPacketJSON, _ := json.Marshal(notValidSnifferPacket)
-		req := httptest.NewRequest(http.MethodPost, "/packet", bytes.NewReader(notValidSnifferPacketJSON))
-		c, rec := createTestContext(req)
-
-		packetAPI.CreatePacket(c)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		rec := sendTestRequestToHandler(notValidSnifferPacket, s.packetAPI.CreatePacket)
+		assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 	}
 }
 
-func TestCreatePacketsWithEmptyJSON(t *testing.T) {
-	snifferPacketJSON := `{}`
-
-	req := httptest.NewRequest(http.MethodPost, "/packet", strings.NewReader(snifferPacketJSON))
-	c, rec := createTestContext(req)
-
-	mockPacketDB := &mocks.PacketDatabase{}
-	packetAPI := PacketAPI{mockPacketDB}
-
-	packetAPI.CreatePacket(c)
-
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
+func (s *PacketAPISuite) TestCreatePacketWithEmptyJSON() {
+	responseStatusCode := sendTestRequestToHandlerWithEmptyJSON(s.packetAPI.CreatePacket)
+	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
 }
 
-func TestCreatePacketsWithCorruptedJSON(t *testing.T) {
-	snifferPacketJSON := `{"Tim}`
+func (s *PacketAPISuite) TestCreatePacketWithCorruptedJSON() {
+	responseStatusCode := sendTestRequestToHandlerWithCorruptedJSON(s.packetAPI.CreatePacket)
+	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
+}
 
-	req := httptest.NewRequest(http.MethodPut, "/packet", strings.NewReader(snifferPacketJSON))
-	c, rec := createTestContext(req)
+func TestCreatePacketWithFailingDB(t *testing.T) {
+	mockFailingPacketDB := createFailingMockPacketDB()
+	packetAPI := PacketAPI{mockFailingPacketDB}
 
-	mockPacketDB := &mocks.PacketDatabase{}
-	packetAPI := PacketAPI{mockPacketDB}
+	snifferPacket := model.SnifferPacket{
+		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
+	}
 
-	packetAPI.CreatePacket(c)
+	rec := sendTestRequestToHandler(snifferPacket, packetAPI.CreatePacket)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
 
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
+func (s *PacketAPISuite) TestCreatePackets() {
+	snifferPackets := []model.SnifferPacket{
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+	}
+
+	rec := sendTestRequestToHandler(snifferPackets, s.packetAPI.CreatePackets)
+	assert.Equal(s.T(), http.StatusCreated, rec.Code)
+
+	var actualSnifferPackets []model.SnifferPacket
+	json.NewDecoder(rec.Body).Decode(&actualSnifferPackets)
+	assert.Equal(s.T(), snifferPackets, actualSnifferPackets)
+
+	expectedPackets := []model.Packet{}
+	for _, snifferPacket := range snifferPackets {
+		expectedPackets = append(expectedPackets, *toPacket(&snifferPacket))
+	}
+	assert.True(s.T(), assert.ObjectsAreEqual(expectedPackets, s.packetDB.Packets))
+}
+
+func (s *PacketAPISuite) TestCreatePacketsWithEmptyRequiredFields() {
+	onlyNotValidPackets := []model.SnifferPacket{
+		{MAC: "", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: ""},
+		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
+	}
+
+	rec := sendTestRequestToHandler(onlyNotValidPackets, s.packetAPI.CreatePackets)
+	assert.Len(s.T(), s.packetDB.Packets, 0)
+	assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
+
+	validAndNotValidPackets := []model.SnifferPacket{
+		{MAC: "", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: ""},
+		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+	}
+
+	rec = sendTestRequestToHandler(validAndNotValidPackets, s.packetAPI.CreatePackets)
+	assert.Len(s.T(), s.packetDB.Packets, 2)
+	assert.Equal(s.T(), http.StatusCreated, rec.Code)
+}
+
+func (s *PacketAPISuite) TestCreatePacketsWithEmptyJSON() {
+	responseStatusCode := sendTestRequestToHandlerWithEmptyJSON(s.packetAPI.CreatePackets)
+	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
+}
+func (s *PacketAPISuite) TestCreatePacketsWithCorruptedJSON() {
+	responseStatusCode := sendTestRequestToHandlerWithCorruptedJSON(s.packetAPI.CreatePackets)
+	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
 }
 
 func TestCreatePacketsWithFailingDB(t *testing.T) {
-	now := time.Now().UTC()
-
-	snifferPacket := model.SnifferPacket{
-		MAC: "22:44:66:88:AA:CC", Timestamp: now, RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
-	}
-	snifferPacketJSON, _ := json.Marshal(snifferPacket)
-
-	req := httptest.NewRequest(http.MethodPost, "/packet", bytes.NewReader(snifferPacketJSON))
-	c, rec := createTestContext(req)
-
 	mockPacketDB := createFailingMockPacketDB()
 	packetAPI := PacketAPI{mockPacketDB}
 
-	packetAPI.CreatePacket(c)
+	snifferPackets := []model.SnifferPacket{
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+	}
 
+	rec := sendTestRequestToHandler(snifferPackets, packetAPI.CreatePackets)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
