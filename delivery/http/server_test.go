@@ -1,4 +1,4 @@
-package router
+package server
 
 import (
 	"encoding/json"
@@ -30,8 +30,8 @@ func TestIntegrationSuite(t *testing.T) {
 }
 
 func (s *IntegrationSuite) BeforeTest(string, string) {
-	router := Create(&test.InMemoryDB{})
-	s.server = httptest.NewServer(router)
+	server := Create(&test.InMemoryDB{})
+	s.server = httptest.NewServer(server)
 }
 
 func (s *IntegrationSuite) AfterTest(string, string) {

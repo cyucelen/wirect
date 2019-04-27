@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/cyucelen/wirect/database"
-	"github.com/cyucelen/wirect/router"
+	"github.com/cyucelen/wirect/delivery/http"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo/middleware"
 )
@@ -14,7 +14,7 @@ func main() {
 		panic(err)
 	}
 
-	e := router.Create(db)
+	e := server.Create(db)
 
 	e.Use(middleware.Logger())
 
