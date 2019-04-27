@@ -10,30 +10,34 @@ type Database interface {
 	api.SnifferDatabase
 }
 
-const packetEndpoint = "/packets"
+const packetsEndpoint = "/packets"
 const packetsCollectionEndpoint = "/packets-collection"
-const snifferEndpoint = "/sniffers"
+const sniffersEndpoint = "/sniffers"
+const crowdEndpoint = "/crowd"
 
 func Create(db Database) *echo.Echo {
 	e := echo.New()
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
+	createCrowdEndpoints(e, db)
 
-	crowdAPI := &api.CrowdAPI{DB: db}
-
-	e.GET("/crowd", crowdAPI.GetCrowd)
 	return e
 }
 
 func createPacketEndpoints(e *echo.Echo, db Database) {
 	packetAPI := api.PacketAPI{DB: db}
-	e.POST(packetEndpoint, packetAPI.CreatePacket)
+	e.POST(packetsEndpoint, packetAPI.CreatePacket)
 	e.POST(packetsCollectionEndpoint, packetAPI.CreatePackets)
 }
 
 func createSnifferEndpoints(e *echo.Echo, db Database) {
 	snifferAPI := api.SnifferAPI{DB: db}
-	e.GET(snifferEndpoint, snifferAPI.GetSniffers)
-	e.POST(snifferEndpoint, snifferAPI.CreateSniffer)
-	e.PUT(snifferEndpoint, snifferAPI.UpdateSniffer)
+	e.GET(sniffersEndpoint, snifferAPI.GetSniffers)
+	e.POST(sniffersEndpoint, snifferAPI.CreateSniffer)
+	e.PUT(sniffersEndpoint, snifferAPI.UpdateSniffer)
+}
+
+func createCrowdEndpoints(e *echo.Echo, db Database) {
+	crowdAPI := &api.CrowdAPI{DB: db}
+	e.GET(crowdEndpoint, crowdAPI.GetCrowd)
 }
