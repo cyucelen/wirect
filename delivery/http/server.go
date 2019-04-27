@@ -11,6 +11,7 @@ type Database interface {
 }
 
 const packetEndpoint = "/packets"
+const packetsCollectionEndpoint = "/packets-collection"
 const snifferEndpoint = "/sniffers"
 
 func Create(db Database) *echo.Echo {
@@ -27,6 +28,7 @@ func Create(db Database) *echo.Echo {
 func createPacketEndpoints(e *echo.Echo, db Database) {
 	packetAPI := api.PacketAPI{DB: db}
 	e.POST(packetEndpoint, packetAPI.CreatePacket)
+	e.POST(packetsCollectionEndpoint, packetAPI.CreatePackets)
 }
 
 func createSnifferEndpoints(e *echo.Echo, db Database) {
