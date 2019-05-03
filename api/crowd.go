@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -33,7 +34,7 @@ func CreateCrowdAPI(db CrowdDatabase, options ...Option) *CrowdAPI {
 }
 
 func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
-	snifferMAC := ctx.QueryParam("sniffer")
+	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
 	since, _ := strconv.ParseInt(ctx.QueryParam("since"), 10, 64)
 
 	intervalInSeconds := int64(c.Interval / time.Second)

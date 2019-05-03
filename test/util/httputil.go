@@ -6,10 +6,9 @@ import (
 	"time"
 )
 
-func AddGetCrowdRequestHeaders(req *http.Request, since time.Time, snifferMAC string) {
+func AddGetCrowdRequestHeaders(req *http.Request, since time.Time) {
 	q := req.URL.Query()
 	s := strconv.FormatInt(since.Unix(), 10)
 	q.Add("since", s)
-	q.Add("sniffer", snifferMAC)
 	req.URL.RawQuery = q.Encode()
 }

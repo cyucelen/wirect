@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -152,9 +153,10 @@ func (s *IntegrationSuite) sendGetTimeRequest() model.Time {
 }
 
 func (s *IntegrationSuite) sendGetCrowdRequest(since time.Time, snifferMAC string) model.Crowd {
-	req := s.newRequest(http.MethodGet, "crowd", "")
+	resource := fmt.Sprintf("sniffers/%s/crowd", url.QueryEscape(snifferMAC))
+	req := s.newRequest(http.MethodGet, resource, "")
 
-	testutil.AddGetCrowdRequestHeaders(req, since, snifferMAC)
+	testutil.AddGetCrowdRequestHeaders(req, since)
 	res, err := client.Do(req)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)

@@ -16,7 +16,7 @@ var tick = clock.New()
 const packetsEndpoint = "/packets"
 const packetsCollectionEndpoint = "/packets-collection"
 const sniffersEndpoint = "/sniffers"
-const crowdEndpoint = "/crowd"
+const crowdEndpoint = "/sniffers/:snifferMAC/crowd"
 const timeEndpoint = "/time"
 
 func Create(db Database) *echo.Echo {

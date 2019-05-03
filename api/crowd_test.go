@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -34,10 +35,13 @@ func TestGetCrowd(t *testing.T) {
 
 	crowdAPI := &CrowdAPI{DB: mockPacketDB, Interval: 5 * time.Minute}
 
-	req := httptest.NewRequest(http.MethodGet, "/crowd", nil)
-	testutil.AddGetCrowdRequestHeaders(req, now, snifferMAC)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	testutil.AddGetCrowdRequestHeaders(req, now)
 
 	c, rec := createTestContext(req)
+	c.SetPath("/sniffers/:snifferMAC/crowd")
+	c.SetParamNames("snifferMAC")
+	c.SetParamValues(url.QueryEscape(snifferMAC))
 	crowdAPI.GetCrowd(c)
 	assert.Equal(t, http.StatusOK, rec.Code)
 
