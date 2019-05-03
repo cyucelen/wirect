@@ -23,12 +23,11 @@ func createTestContext(req *http.Request) (echo.Context, *httptest.ResponseRecor
 	return c, rec
 }
 
-func sendTestRequestToHandler(snifferMAC string, payload interface{}, handler handlerFunc) *httptest.ResponseRecorder {
+func sendTestRequestToHandler(snifferMAC string, payload interface{}, handler handlerFunc, httpMethod string) *httptest.ResponseRecorder {
 	payloadJSON, _ := json.Marshal(payload)
-	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(payloadJSON))
+	req := httptest.NewRequest(httpMethod, "/", bytes.NewReader(payloadJSON))
 	c, rec := createTestContext(req)
-	addSnifferMACParamToContext(c, "/sniffers/:snifferMAC/packets", snifferMAC)
-
+	addSnifferMACParamToContext(c, snifferMAC)
 	handler(c)
 
 	return rec
@@ -54,8 +53,8 @@ func sendTestRequestToHandlerWithCorruptedJSON(handler handlerFunc) int {
 	return rec.Code
 }
 
-func addSnifferMACParamToContext(ctx echo.Context, path, snifferMAC string) {
-	ctx.SetPath(path)
+func addSnifferMACParamToContext(ctx echo.Context, snifferMAC string) {
+	ctx.SetPath("/:snifferMAC")
 	ctx.SetParamNames("snifferMAC")
 	ctx.SetParamValues(url.QueryEscape(snifferMAC))
 }

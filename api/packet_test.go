@@ -50,7 +50,7 @@ func (s *PacketAPISuite) TestCreatePacket() {
 		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, s.packetAPI.CreatePacket)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, s.packetAPI.CreatePacket, http.MethodPost)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 
 	var actualSnifferPacket model.SnifferPacket
@@ -68,7 +68,7 @@ func (s *PacketAPISuite) TestCreatePacketWithEmptyRequiredFields() {
 	}
 
 	for _, notValidSnifferPacket := range notValidSnifferPackets {
-		rec := sendTestRequestToHandler(defaultTestSnifferMAC, notValidSnifferPacket, s.packetAPI.CreatePacket)
+		rec := sendTestRequestToHandler(defaultTestSnifferMAC, notValidSnifferPacket, s.packetAPI.CreatePacket, http.MethodPost)
 		assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 	}
 }
@@ -91,7 +91,7 @@ func TestCreatePacketWithFailingDB(t *testing.T) {
 		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, packetAPI.CreatePacket)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, packetAPI.CreatePacket, http.MethodPost)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
@@ -101,7 +101,7 @@ func (s *PacketAPISuite) TestCreatePackets() {
 		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, s.packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, s.packetAPI.CreatePackets, http.MethodPost)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 
 	var actualSnifferPackets []model.SnifferPacket
@@ -121,7 +121,7 @@ func (s *PacketAPISuite) TestCreatePacketsWithEmptyRequiredFields() {
 		{MAC: "01:02:03:04:05:06", RSSI: 123},
 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, onlyNotValidPackets, s.packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, onlyNotValidPackets, s.packetAPI.CreatePackets, http.MethodPost)
 	assert.Len(s.T(), s.packetDB.Packets, 0)
 	assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 
@@ -133,7 +133,7 @@ func (s *PacketAPISuite) TestCreatePacketsWithEmptyRequiredFields() {
 		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidPackets, s.packetAPI.CreatePackets)
+	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidPackets, s.packetAPI.CreatePackets, http.MethodPost)
 	assert.Len(s.T(), s.packetDB.Packets, 3)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 }
@@ -156,6 +156,6 @@ func TestCreatePacketsWithFailingDB(t *testing.T) {
 		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, packetAPI.CreatePackets, http.MethodPost)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }

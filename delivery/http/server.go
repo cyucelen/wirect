@@ -13,11 +13,12 @@ type Database interface {
 
 var tick = clock.New()
 
-const packetsEndpoint = "/sniffers/:snifferMAC/packets"
-const packetsCollectionEndpoint = "/sniffers/:snifferMAC/packets-collection"
+const snifferMACParam = "/:snifferMAC"
 const sniffersEndpoint = "/sniffers"
-const updateSnifferEndpoint = sniffersEndpoint + "/:snifferMAC"
-const crowdEndpoint = "/sniffers/:snifferMAC/crowd"
+const packetsEndpoint = sniffersEndpoint + snifferMACParam + "/packets"
+const packetsCollectionEndpoint = sniffersEndpoint + snifferMACParam + "/packets-collection"
+const updateSnifferEndpoint = sniffersEndpoint + snifferMACParam
+const crowdEndpoint = sniffersEndpoint + snifferMACParam + "/crowd"
 const timeEndpoint = "/time"
 
 func Create(db Database) *echo.Echo {
