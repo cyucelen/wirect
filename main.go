@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	db, err := database.New("sqlite3", "./wirect.db", true)
+	db, err := database.New("sqlite3", "./wirect.db")
 
 	if err != nil {
 		panic(err)

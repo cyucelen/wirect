@@ -14,8 +14,8 @@ func (s *DatabaseSuite) TestCreateSniffer() {
 	var sniffers []*model.Sniffer
 	s.db.DB.Find(&sniffers)
 
-	assert.Len(s.T(), sniffers, 2)
-	assert.Equal(s.T(), sniffers[1].MAC, snifferMAC)
+	assert.Len(s.T(), sniffers, 1)
+	assert.Equal(s.T(), sniffers[0].MAC, snifferMAC)
 }
 
 func (s *DatabaseSuite) TestGetSniffers() {
@@ -27,9 +27,9 @@ func (s *DatabaseSuite) TestGetSniffers() {
 		s.db.CreateSniffer(&sniffer)
 	}
 
-	sniffersInDB := s.db.GetSniffers() // plus default sniffer
-	assert.Len(s.T(), sniffersInDB, 3)
-	assert.Equal(s.T(), sniffers, sniffersInDB[1:])
+	sniffersInDB := s.db.GetSniffers()
+	assert.Len(s.T(), sniffersInDB, 2)
+	assert.Equal(s.T(), sniffers, sniffersInDB)
 }
 
 func (s *DatabaseSuite) TestUpdateSniffer() {
@@ -55,5 +55,5 @@ func (s *DatabaseSuite) TestUpdateSniffer() {
 		}
 	}
 
-	assert.Len(s.T(), sniffersInDB, 3)
+	assert.Len(s.T(), sniffersInDB, 2)
 }

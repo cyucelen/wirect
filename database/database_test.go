@@ -8,7 +8,6 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
-	"github.com/cyucelen/wirect/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -29,7 +28,7 @@ func TestDatabaseSuite(t *testing.T) {
 
 func (s *DatabaseSuite) BeforeTest(suiteName, testName string) {
 	s.testDBPath = "./testDBs/test_suite.db"
-	db, err := New("sqlite3", s.testDBPath, true)
+	db, err := New("sqlite3", s.testDBPath)
 	os.Chmod(s.testDBPath, 777)
 	assert.Nil(s.T(), err)
 	s.db = db
@@ -40,16 +39,10 @@ func (s *DatabaseSuite) AfterTest(suiteName, testName string) {
 	os.RemoveAll(filepath.Dir(s.testDBPath))
 }
 
-func (s *DatabaseSuite) TestNewCreatesDefaultSniffer() {
-	snifferCount := 0
-	s.db.DB.Find(new(model.Sniffer)).Count(&snifferCount)
-	s.NotZero(snifferCount)
-}
-
 func TestInvalidDialect(t *testing.T) {
 	path := "./testDBs/test.db"
 
-	_, err := New("what is this dialect", path, true)
+	_, err := New("what is this dialect", path)
 	assert.Error(t, err)
 }
 
@@ -58,7 +51,7 @@ func TestMkdirError(t *testing.T) {
 	mkdirAllFunc = failingMkdirAll
 
 	createNewDBFunc := func() {
-		New("sqlite3", path, true)
+		New("sqlite3", path)
 	}
 
 	assert.Panics(t, createNewDBFunc)

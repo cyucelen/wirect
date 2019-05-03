@@ -16,7 +16,7 @@ type GormDatabase struct {
 }
 
 // New creates a new wrapper for the gorm database framework
-func New(dialect, connection string, createDefaultSnifferIfNotExist bool) (*GormDatabase, error) {
+func New(dialect, connection string) (*GormDatabase, error) {
 	createDirectoryIfSqlite(dialect, connection)
 	db, err := gorm.Open(dialect, connection)
 	if err != nil {
@@ -25,13 +25,6 @@ func New(dialect, connection string, createDefaultSnifferIfNotExist bool) (*Gorm
 
 	db.DB().SetMaxOpenConns(1) // sqlite cannot handle concurrent writes
 	db.AutoMigrate(&model.Packet{}, &model.Router{}, &model.Sniffer{})
-
-	snifferCount := 0
-	db.Find(new(model.Sniffer)).Count(&snifferCount)
-
-	if createDefaultSnifferIfNotExist && snifferCount == 0 {
-		db.Create(&model.Sniffer{MAC: "00:00:00:00:00:00", Name: "default", Location: "default"})
-	}
 
 	return &GormDatabase{DB: db}, nil
 }
