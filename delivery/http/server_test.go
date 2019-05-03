@@ -11,14 +11,11 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-
-	"github.com/stretchr/testify/suite"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cyucelen/wirect/model"
 	"github.com/cyucelen/wirect/test"
 	testutil "github.com/cyucelen/wirect/test/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 var client = &http.Client{}
@@ -90,16 +87,16 @@ func (s *IntegrationSuite) TestGetCrowd() {
 
 	now := s.clock.Now()
 	packets := []model.Packet{
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second).Unix(), RSSI: 23.4, SnifferMAC: snifferMAC},
-		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second).Unix(), RSSI: 44, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-7 * time.Second).Unix(), RSSI: 333, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-5 * time.Second).Unix(), RSSI: 1.2232, SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Unix(), RSSI: 1.2, SnifferMAC: snifferMAC},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second).Unix(), RSSI: 23.4},
+		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second).Unix(), RSSI: 44},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-7 * time.Second).Unix(), RSSI: 333},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-5 * time.Second).Unix(), RSSI: 1.2232},
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Unix(), RSSI: 1.2},
 	}
 
 	for _, packet := range packets {
 		packetJSON, _ := json.Marshal(packet)
-		s.sendCreatePacketRequest(string(packetJSON))
+		s.sendCreatePacketRequest(snifferMAC, string(packetJSON))
 	}
 
 	actualCrowd := s.sendGetCrowdRequest(now, snifferMAC)
@@ -108,12 +105,12 @@ func (s *IntegrationSuite) TestGetCrowd() {
 
 	now = now.Add(1 * time.Minute)
 	packets = []model.Packet{
-		{MAC: "CC:FF:CC:FF:CC:FF", Timestamp: now.Add(-35 * time.Second).Unix(), RSSI: 44, SnifferMAC: snifferMAC},
-		{MAC: "DD:CC:DD:CC:DD:CC", Timestamp: now.Add(-25 * time.Second).Unix(), RSSI: 23.4, SnifferMAC: snifferMAC},
+		{MAC: "CC:FF:CC:FF:CC:FF", Timestamp: now.Add(-35 * time.Second).Unix(), RSSI: 44},
+		{MAC: "DD:CC:DD:CC:DD:CC", Timestamp: now.Add(-25 * time.Second).Unix(), RSSI: 23.4},
 	}
 
 	packetsJSON, _ := json.Marshal(packets)
-	s.sendCreatePacketsRequest(string(packetsJSON))
+	s.sendCreatePacketsRequest(snifferMAC, string(packetsJSON))
 
 	actualCrowd = s.sendGetCrowdRequest(now, snifferMAC)
 	expectedCrowd = 4
@@ -166,8 +163,9 @@ func (s *IntegrationSuite) sendGetCrowdRequest(since time.Time, snifferMAC strin
 	return crowd
 }
 
-func (s *IntegrationSuite) sendCreatePacketRequest(payload string) {
-	res := s.sendRequest(http.MethodPost, "packets", payload)
+func (s *IntegrationSuite) sendCreatePacketRequest(snifferMAC, payload string) {
+	resource := fmt.Sprintf("sniffers/%s/packets", snifferMAC)
+	res := s.sendRequest(http.MethodPost, resource, payload)
 
 	var actualResponse model.Packet
 	json.NewDecoder(res.Body).Decode(&actualResponse)
@@ -179,8 +177,9 @@ func (s *IntegrationSuite) sendCreatePacketRequest(payload string) {
 	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
 }
 
-func (s *IntegrationSuite) sendCreatePacketsRequest(payload string) {
-	res := s.sendRequest(http.MethodPost, "packets-collection", payload)
+func (s *IntegrationSuite) sendCreatePacketsRequest(snifferMAC, payload string) {
+	resource := fmt.Sprintf("sniffers/%s/packets-collection", snifferMAC)
+	res := s.sendRequest(http.MethodPost, resource, payload)
 
 	var actualResponse []model.Packet
 	json.NewDecoder(res.Body).Decode(&actualResponse)

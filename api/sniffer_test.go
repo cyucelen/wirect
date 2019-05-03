@@ -6,13 +6,11 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/cyucelen/wirect/api/mocks"
 	"github.com/cyucelen/wirect/model"
-	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -127,7 +125,7 @@ func TestUpdateSniffer(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPut, "/", bytes.NewReader(updateSnifferJSON))
 	c, rec := createTestContext(req)
-	addSnifferMACParamToContext(c, snifferMAC)
+	addSnifferMACParamToContext(c, "/sniffers/:snifferMAC", snifferMAC)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
@@ -179,7 +177,7 @@ func TestUpdateWithFailingDBUpdate(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPut, "/", bytes.NewReader(updateSnifferJSON))
 	c, rec := createTestContext(req)
-	addSnifferMACParamToContext(c, snifferMAC)
+	addSnifferMACParamToContext(c, "/sniffers/:snifferMAC", snifferMAC)
 
 	mockSnifferDB := createFailingMockSnifferDB()
 	snifferAPI := &SnifferAPI{mockSnifferDB}
@@ -188,10 +186,4 @@ func TestUpdateWithFailingDBUpdate(t *testing.T) {
 	assert.NotNil(t, err)
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
-}
-
-func addSnifferMACParamToContext(ctx echo.Context, snifferMAC string) {
-	ctx.SetPath("/sniffers/:snifferMAC")
-	ctx.SetParamNames("snifferMAC")
-	ctx.SetParamValues(url.QueryEscape(snifferMAC))
 }

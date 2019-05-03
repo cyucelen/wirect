@@ -37,36 +37,38 @@ func createFailingMockPacketDB() *mocks.PacketDatabase {
 	return mockPacketDB
 }
 
+const defaultTestSnifferMAC = "00:00:00:00:00:00"
+
 func (s *PacketAPISuite) BeforeTest(string, string) {
 	s.packetDB = createMockPacketDB()
+	s.packetDB.Sniffers = append(s.packetDB.Sniffers, model.Sniffer{MAC: defaultTestSnifferMAC})
 	s.packetAPI = &PacketAPI{s.packetDB}
 }
 
 func (s *PacketAPISuite) TestCreatePacket() {
 	snifferPacket := model.SnifferPacket{
-		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
+		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
 	}
 
-	rec := sendTestRequestToHandler(snifferPacket, s.packetAPI.CreatePacket)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, s.packetAPI.CreatePacket)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 
 	var actualSnifferPacket model.SnifferPacket
 	json.NewDecoder(rec.Body).Decode(&actualSnifferPacket)
 	assert.Equal(s.T(), snifferPacket, actualSnifferPacket)
 
-	expectedPacket := *toPacket(&snifferPacket)
+	expectedPacket := *toPacket(&snifferPacket, defaultTestSnifferMAC)
 	assert.True(s.T(), assert.ObjectsAreEqual(expectedPacket, s.packetDB.Packets[0]))
 }
 
 func (s *PacketAPISuite) TestCreatePacketWithEmptyRequiredFields() {
 	notValidSnifferPackets := []model.SnifferPacket{
-		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: ""},
-		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
+		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "01:02:03:04:05:06", RSSI: 123},
 	}
 
 	for _, notValidSnifferPacket := range notValidSnifferPackets {
-		rec := sendTestRequestToHandler(notValidSnifferPacket, s.packetAPI.CreatePacket)
+		rec := sendTestRequestToHandler(defaultTestSnifferMAC, notValidSnifferPacket, s.packetAPI.CreatePacket)
 		assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 	}
 }
@@ -86,20 +88,20 @@ func TestCreatePacketWithFailingDB(t *testing.T) {
 	packetAPI := PacketAPI{mockFailingPacketDB}
 
 	snifferPacket := model.SnifferPacket{
-		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00",
+		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
 	}
 
-	rec := sendTestRequestToHandler(snifferPacket, packetAPI.CreatePacket)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPacket, packetAPI.CreatePacket)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
 func (s *PacketAPISuite) TestCreatePackets() {
 	snifferPackets := []model.SnifferPacket{
-		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec := sendTestRequestToHandler(snifferPackets, s.packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, s.packetAPI.CreatePackets)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 
 	var actualSnifferPackets []model.SnifferPacket
@@ -108,32 +110,31 @@ func (s *PacketAPISuite) TestCreatePackets() {
 
 	expectedPackets := []model.Packet{}
 	for _, snifferPacket := range snifferPackets {
-		expectedPackets = append(expectedPackets, *toPacket(&snifferPacket))
+		expectedPackets = append(expectedPackets, *toPacket(&snifferPacket, defaultTestSnifferMAC))
 	}
 	assert.True(s.T(), assert.ObjectsAreEqual(expectedPackets, s.packetDB.Packets))
 }
 
 func (s *PacketAPISuite) TestCreatePacketsWithEmptyRequiredFields() {
 	onlyNotValidPackets := []model.SnifferPacket{
-		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: ""},
-		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
+		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "01:02:03:04:05:06", RSSI: 123},
 	}
 
-	rec := sendTestRequestToHandler(onlyNotValidPackets, s.packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, onlyNotValidPackets, s.packetAPI.CreatePackets)
 	assert.Len(s.T(), s.packetDB.Packets, 0)
 	assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 
 	validAndNotValidPackets := []model.SnifferPacket{
-		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: ""},
-		{MAC: "01:02:03:04:05:06", RSSI: 123, SnifferMAC: "01:02:03:04:05:06"},
-		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "01:02:03:04:05:06", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "01:02:03:04:05:06", RSSI: 123},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec = sendTestRequestToHandler(validAndNotValidPackets, s.packetAPI.CreatePackets)
-	assert.Len(s.T(), s.packetDB.Packets, 2)
+	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidPackets, s.packetAPI.CreatePackets)
+	assert.Len(s.T(), s.packetDB.Packets, 3)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 }
 
@@ -151,10 +152,10 @@ func TestCreatePacketsWithFailingDB(t *testing.T) {
 	packetAPI := PacketAPI{mockPacketDB}
 
 	snifferPackets := []model.SnifferPacket{
-		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123, SnifferMAC: "00:00:00:00:00:00"},
-		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222, SnifferMAC: "00:00:00:00:00:00"},
+		{MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123},
+		{MAC: "33:11:22:44:55:66", Timestamp: time.Now().UTC().Unix(), RSSI: 222},
 	}
 
-	rec := sendTestRequestToHandler(snifferPackets, packetAPI.CreatePackets)
+	rec := sendTestRequestToHandler(defaultTestSnifferMAC, snifferPackets, packetAPI.CreatePackets)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }

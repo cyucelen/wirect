@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/labstack/echo"
 
@@ -31,7 +32,8 @@ func (p *PacketAPI) CreatePacket(ctx echo.Context) error {
 		return errors.New("")
 	}
 
-	packet := toPacket(&snifferPacket)
+	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
+	packet := toPacket(&snifferPacket, snifferMAC)
 
 	if err := p.DB.CreatePacket(packet); err != nil {
 		ctx.JSON(http.StatusInternalServerError, nil)
@@ -57,8 +59,9 @@ func (p *PacketAPI) CreatePackets(ctx echo.Context) error {
 		return errors.New("")
 	}
 
+	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
 	for _, validSnifferPacket := range validSnifferPackets {
-		packet := toPacket(&validSnifferPacket)
+		packet := toPacket(&validSnifferPacket, snifferMAC)
 
 		if err := p.DB.CreatePacket(packet); err != nil {
 			ctx.JSON(http.StatusInternalServerError, nil)
@@ -81,14 +84,14 @@ func filterValidSnifferPackets(snifferPackets []model.SnifferPacket) []model.Sni
 }
 
 func isSnifferPacketValid(snifferPacket model.SnifferPacket) bool {
-	return snifferPacket.MAC != "" && snifferPacket.SnifferMAC != "" && snifferPacket.Timestamp != 0
+	return snifferPacket.MAC != "" && snifferPacket.Timestamp != 0
 }
 
-func toPacket(snifferPacket *model.SnifferPacket) *model.Packet {
+func toPacket(snifferPacket *model.SnifferPacket, snifferMAC string) *model.Packet {
 	return &model.Packet{
 		MAC:        snifferPacket.MAC,
 		Timestamp:  snifferPacket.Timestamp,
 		RSSI:       snifferPacket.RSSI,
-		SnifferMAC: snifferPacket.SnifferMAC,
+		SnifferMAC: snifferMAC,
 	}
 }

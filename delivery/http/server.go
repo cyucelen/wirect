@@ -13,10 +13,10 @@ type Database interface {
 
 var tick = clock.New()
 
-const packetsEndpoint = "/packets"
-const packetsCollectionEndpoint = "/packets-collection"
+const packetsEndpoint = "/sniffers/:snifferMAC/packets"
+const packetsCollectionEndpoint = "/sniffers/:snifferMAC/packets-collection"
 const sniffersEndpoint = "/sniffers"
-const updateSnifferEndpoint = "/sniffers/:snifferMAC"
+const updateSnifferEndpoint = sniffersEndpoint + "/:snifferMAC"
 const crowdEndpoint = "/sniffers/:snifferMAC/crowd"
 const timeEndpoint = "/time"
 

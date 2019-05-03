@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -22,10 +23,12 @@ func createTestContext(req *http.Request) (echo.Context, *httptest.ResponseRecor
 	return c, rec
 }
 
-func sendTestRequestToHandler(payload interface{}, handler handlerFunc) *httptest.ResponseRecorder {
+func sendTestRequestToHandler(snifferMAC string, payload interface{}, handler handlerFunc) *httptest.ResponseRecorder {
 	payloadJSON, _ := json.Marshal(payload)
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(payloadJSON))
 	c, rec := createTestContext(req)
+	addSnifferMACParamToContext(c, "/sniffers/:snifferMAC/packets", snifferMAC)
+
 	handler(c)
 
 	return rec
@@ -49,4 +52,10 @@ func sendTestRequestToHandlerWithCorruptedJSON(handler handlerFunc) int {
 	corruptedJSON := `{"MAC":"AA:AA:AA:AA:AA:AA"`
 	rec := sendTestRequestToHandlerWithRawBody(corruptedJSON, handler)
 	return rec.Code
+}
+
+func addSnifferMACParamToContext(ctx echo.Context, path, snifferMAC string) {
+	ctx.SetPath(path)
+	ctx.SetParamNames("snifferMAC")
+	ctx.SetParamValues(url.QueryEscape(snifferMAC))
 }
