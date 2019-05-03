@@ -37,7 +37,6 @@ func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
 	since, _ := strconv.ParseInt(ctx.QueryParam("since"), 10, 64)
 
 	intervalInSeconds := int64(c.Interval / time.Second)
-
 	packets := c.DB.GetPacketsBySnifferSince(snifferMAC, since-intervalInSeconds)
 
 	crowd := model.Crowd{Count: getUniquePersonCount(packets)}
