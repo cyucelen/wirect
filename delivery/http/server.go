@@ -16,6 +16,7 @@ var tick = clock.New()
 const packetsEndpoint = "/packets"
 const packetsCollectionEndpoint = "/packets-collection"
 const sniffersEndpoint = "/sniffers"
+const updateSnifferEndpoint = "/sniffers/:snifferMAC"
 const crowdEndpoint = "/sniffers/:snifferMAC/crowd"
 const timeEndpoint = "/time"
 
@@ -39,7 +40,7 @@ func createSnifferEndpoints(e *echo.Echo, db Database) {
 	snifferAPI := api.SnifferAPI{DB: db}
 	e.GET(sniffersEndpoint, snifferAPI.GetSniffers)
 	e.POST(sniffersEndpoint, snifferAPI.CreateSniffer)
-	e.PUT(sniffersEndpoint, snifferAPI.UpdateSniffer)
+	e.PUT(updateSnifferEndpoint, snifferAPI.UpdateSniffer)
 }
 
 func createCrowdEndpoints(e *echo.Echo, db Database) {

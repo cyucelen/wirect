@@ -71,8 +71,8 @@ func (s *IntegrationSuite) TestUpdateSniffer() {
 
 	newName := "copy_center_sniffer"
 	newLocation := "copy_center"
-	bodyTemplate := `{"MAC":"02:02:02:02:02:02","name":"%s","location":"%s"}`
-	s.sendUpdateSnifferRequest(fmt.Sprintf(bodyTemplate, newName, newLocation))
+	bodyTemplate := `{"name":"%s","location":"%s"}`
+	s.sendUpdateSnifferRequest("02:02:02:02:02:02", fmt.Sprintf(bodyTemplate, newName, newLocation))
 
 	actualSniffers := s.sendGetSniffersRequest()
 	expectedSniffers := []model.Sniffer{
@@ -214,7 +214,8 @@ func (s *IntegrationSuite) sendCreateSnifferRequest(payload string) {
 	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
 }
 
-func (s *IntegrationSuite) sendUpdateSnifferRequest(payload string) {
-	res := s.sendRequest(http.MethodPut, "sniffers", payload)
+func (s *IntegrationSuite) sendUpdateSnifferRequest(snifferMAC, payload string) {
+	resource := fmt.Sprintf("sniffers/%s", url.QueryEscape(snifferMAC))
+	res := s.sendRequest(http.MethodPut, resource, payload)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
 }

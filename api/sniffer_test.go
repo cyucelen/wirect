@@ -6,11 +6,13 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/cyucelen/wirect/api/mocks"
 	"github.com/cyucelen/wirect/model"
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -35,7 +37,7 @@ func TestCreateSniffer(t *testing.T) {
 	sniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Location: "library"}
 	snifferJSON, _ := json.Marshal(sniffer)
 
-	req := httptest.NewRequest(http.MethodPost, "/sniffer", bytes.NewReader(snifferJSON))
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(snifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
@@ -55,7 +57,7 @@ func TestCreateSniffer(t *testing.T) {
 func TestCreateSnifferWithEmptyJSON(t *testing.T) {
 	snifferJSON := `{}`
 
-	req := httptest.NewRequest(http.MethodPost, "/sniffer", strings.NewReader(snifferJSON))
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(snifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
@@ -70,7 +72,7 @@ func TestCreateSnifferWithEmptyJSON(t *testing.T) {
 func TestCreateSnifferWithCorruptedJSON(t *testing.T) {
 	snifferJSON := `{"Tim}`
 
-	req := httptest.NewRequest(http.MethodPost, "/sniffer", strings.NewReader(snifferJSON))
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(snifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
@@ -85,7 +87,7 @@ func TestCreateSnifferWithFailingDB(t *testing.T) {
 	sniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Location: "library"}
 	snifferJSON, _ := json.Marshal(sniffer)
 
-	req := httptest.NewRequest(http.MethodPost, "/sniffer", bytes.NewReader(snifferJSON))
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(snifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createFailingMockSnifferDB()
@@ -102,7 +104,7 @@ func TestGetSniffers(t *testing.T) {
 		{MAC: "11:22:33:44:55:66", Name: "copy_sniffer", Location: "copy_center"},
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/sniffer", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createMockSnifferDB(sniffers)
@@ -119,11 +121,13 @@ func TestGetSniffers(t *testing.T) {
 }
 
 func TestUpdateSniffer(t *testing.T) {
-	snifferUpdate := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "room_sniffer", Location: "room"}
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
 	updateSnifferJSON, _ := json.Marshal(snifferUpdate)
+	snifferMAC := "11:22:33:44:55:66"
 
-	req := httptest.NewRequest(http.MethodPut, "/sniffer", bytes.NewReader(updateSnifferJSON))
+	req := httptest.NewRequest(http.MethodPut, "/", bytes.NewReader(updateSnifferJSON))
 	c, rec := createTestContext(req)
+	addSnifferMACParamToContext(c, snifferMAC)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
@@ -132,13 +136,15 @@ func TestUpdateSniffer(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	mockSnifferDB.AssertCalled(t, "UpdateSniffer", &snifferUpdate)
+	expectedSnifferUpdate := snifferUpdate
+	expectedSnifferUpdate.MAC = snifferMAC
+	mockSnifferDB.AssertCalled(t, "UpdateSniffer", &expectedSnifferUpdate)
 }
 
 func TestUpdateSnifferWithEmptyJSON(t *testing.T) {
 	updateSnifferJSON := `{}`
 
-	req := httptest.NewRequest(http.MethodPut, "/sniffer", strings.NewReader(updateSnifferJSON))
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(updateSnifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := &mocks.SnifferDatabase{}
@@ -154,7 +160,7 @@ func TestUpdateSnifferWithEmptyJSON(t *testing.T) {
 func TestUpdateSnifferWithCorruptedJSON(t *testing.T) {
 	snifferJSON := `{"Tim}`
 
-	req := httptest.NewRequest(http.MethodPut, "/sniffer", strings.NewReader(snifferJSON))
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(snifferJSON))
 	c, rec := createTestContext(req)
 
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
@@ -167,11 +173,13 @@ func TestUpdateSnifferWithCorruptedJSON(t *testing.T) {
 }
 
 func TestUpdateWithFailingDBUpdate(t *testing.T) {
-	snifferUpdate := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "room_sniffer", Location: "room"}
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
 	updateSnifferJSON, _ := json.Marshal(snifferUpdate)
+	snifferMAC := "11:22:33:44:55:66"
 
-	req := httptest.NewRequest(http.MethodPut, "/sniffer", bytes.NewReader(updateSnifferJSON))
+	req := httptest.NewRequest(http.MethodPut, "/", bytes.NewReader(updateSnifferJSON))
 	c, rec := createTestContext(req)
+	addSnifferMACParamToContext(c, snifferMAC)
 
 	mockSnifferDB := createFailingMockSnifferDB()
 	snifferAPI := &SnifferAPI{mockSnifferDB}
@@ -180,4 +188,10 @@ func TestUpdateWithFailingDBUpdate(t *testing.T) {
 	assert.NotNil(t, err)
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func addSnifferMACParamToContext(ctx echo.Context, snifferMAC string) {
+	ctx.SetPath("/sniffers/:snifferMAC")
+	ctx.SetParamNames("snifferMAC")
+	ctx.SetParamValues(url.QueryEscape(snifferMAC))
 }
