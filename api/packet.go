@@ -32,7 +32,10 @@ func (p *PacketAPI) CreatePacket(ctx echo.Context) error {
 		return errors.New("")
 	}
 
-	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
+	snifferMAC, err := getSnifferMAC(ctx)
+	if err != nil {
+		return err
+	}
 	packet := toPacket(&snifferPacket, snifferMAC)
 
 	if err := p.DB.CreatePacket(packet); err != nil {
@@ -59,7 +62,11 @@ func (p *PacketAPI) CreatePackets(ctx echo.Context) error {
 		return errors.New("")
 	}
 
-	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
+	snifferMAC, err := getSnifferMAC(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, validSnifferPacket := range validSnifferPackets {
 		packet := toPacket(&validSnifferPacket, snifferMAC)
 
@@ -71,6 +78,15 @@ func (p *PacketAPI) CreatePackets(ctx echo.Context) error {
 
 	ctx.JSON(http.StatusCreated, snifferPackets)
 	return nil
+}
+
+func getSnifferMAC(ctx echo.Context) (string, error) {
+	snifferMAC, err := url.QueryUnescape(ctx.Param("snifferMAC"))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, nil)
+		return "", err
+	}
+	return snifferMAC, nil
 }
 
 func filterValidSnifferPackets(snifferPackets []model.SnifferPacket) []model.SnifferPacket {

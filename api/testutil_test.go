@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 )
 
@@ -36,6 +37,19 @@ func sendTestRequestToHandler(snifferMAC string, payload interface{}, handler ha
 func sendTestRequestToHandlerWithRawBody(payload string, handler handlerFunc) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(payload))
 	c, rec := createTestContext(req)
+	handler(c)
+
+	return rec
+}
+
+func sendTestRequestToHandlerWithInvalidParam(payload interface{}, handler handlerFunc) *httptest.ResponseRecorder {
+	payloadJSON, _ := json.Marshal(payload)
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(payloadJSON))
+	c, rec := createTestContext(req)
+	c.SetPath("/:snifferMAC")
+	c.SetParamNames("snifferMAC")
+	c.SetParamValues("%%")
+	ffmt.Puts(c.QueryParam("snifferMAC"))
 	handler(c)
 
 	return rec

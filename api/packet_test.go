@@ -73,6 +73,14 @@ func (s *PacketAPISuite) TestCreatePacketWithEmptyRequiredFields() {
 	}
 }
 
+func (s *PacketAPISuite) TestCreatePacketWithInvalidSnifferMACParam() {
+	snifferPacket := model.SnifferPacket{
+		MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
+	}
+	rec := sendTestRequestToHandlerWithInvalidParam(snifferPacket, s.packetAPI.CreatePacket)
+	assert.Equal(s.T(), http.StatusNotFound, rec.Code)
+}
+
 func (s *PacketAPISuite) TestCreatePacketWithEmptyJSON() {
 	responseStatusCode := sendTestRequestToHandlerWithEmptyJSON(s.packetAPI.CreatePacket)
 	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
@@ -136,6 +144,16 @@ func (s *PacketAPISuite) TestCreatePacketsWithEmptyRequiredFields() {
 	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidPackets, s.packetAPI.CreatePackets, http.MethodPost)
 	assert.Len(s.T(), s.packetDB.Packets, 3)
 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
+}
+
+func (s *PacketAPISuite) TestCreatePacketsWithInvalidSnifferMACParam() {
+	snifferPacket := []model.SnifferPacket{
+		{
+			MAC: "22:44:66:88:AA:CC", Timestamp: time.Now().UTC().Unix(), RSSI: 123,
+		},
+	}
+	rec := sendTestRequestToHandlerWithInvalidParam(snifferPacket, s.packetAPI.CreatePackets)
+	assert.Equal(s.T(), http.StatusNotFound, rec.Code)
 }
 
 func (s *PacketAPISuite) TestCreatePacketsWithEmptyJSON() {
