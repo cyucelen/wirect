@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
 	"github.com/cyucelen/wirect/model"
 	"github.com/labstack/echo"
@@ -41,19 +40,23 @@ func (s *SnifferAPI) GetSniffers(ctx echo.Context) error {
 }
 
 func (s *SnifferAPI) UpdateSniffer(ctx echo.Context) error {
-	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
 	sniffer := new(model.Sniffer)
-	if err := ctx.Bind(sniffer); err != nil || snifferMAC == "" {
+	if err := ctx.Bind(sniffer); err != nil {
 		ctx.JSON(http.StatusBadRequest, nil)
 		return nil
 	}
 
-	sniffer.MAC = snifferMAC
+	var err error
+	sniffer.MAC, err = getSnifferMAC(ctx)
+	if err != nil {
+		return err
+	}
 
 	if err := s.DB.UpdateSniffer(sniffer); err != nil {
 		ctx.JSON(http.StatusInternalServerError, nil)
 		return errors.New("")
 	}
+
 	ctx.JSON(http.StatusOK, nil)
 	return nil
 }

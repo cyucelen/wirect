@@ -99,12 +99,21 @@ func TestUpdateSniffer(t *testing.T) {
 	mockSnifferDB.AssertCalled(t, "UpdateSniffer", &expectedSnifferUpdate)
 }
 
+func TestUpdateSnifferWithInvalidSnifferMACParam(t *testing.T) {
+	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
+	snifferAPI := &SnifferAPI{mockSnifferDB}
+
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
+	rec := sendTestRequestToHandlerWithInvalidParam(snifferUpdate, snifferAPI.UpdateSniffer)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
 func TestUpdateSnifferWithEmptyJSON(t *testing.T) {
 	mockSnifferDB := &mocks.SnifferDatabase{}
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
 	responseCode := sendTestRequestToHandlerWithEmptyJSON(snifferAPI.UpdateSniffer)
-	assert.Equal(t, http.StatusBadRequest, responseCode)
+	assert.Equal(t, http.StatusNotFound, responseCode)
 	mockSnifferDB.AssertNotCalled(t, "UpdateSniffer", &model.Sniffer{})
 }
 

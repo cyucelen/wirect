@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 )
 
@@ -49,7 +48,6 @@ func sendTestRequestToHandlerWithInvalidParam(payload interface{}, handler handl
 	c.SetPath("/:snifferMAC")
 	c.SetParamNames("snifferMAC")
 	c.SetParamValues("%%")
-	ffmt.Puts(c.QueryParam("snifferMAC"))
 	handler(c)
 
 	return rec

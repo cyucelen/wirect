@@ -86,6 +86,12 @@ func getSnifferMAC(ctx echo.Context) (string, error) {
 		ctx.JSON(http.StatusNotFound, nil)
 		return "", err
 	}
+
+	if snifferMAC == "" {
+		ctx.JSON(http.StatusNotFound, nil)
+		return "", errors.New("")
+	}
+
 	return snifferMAC, nil
 }
 
