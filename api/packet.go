@@ -14,6 +14,8 @@ type PacketDatabase interface {
 	CreatePacket(packet *model.Packet) error
 	GetPacketsBySniffer(snifferMAC string) []model.Packet
 	GetPacketsBySnifferSince(snifferMAC string, since int64) []model.Packet
+	GetPacketsBySnifferBetweenDates(snifferMAC string, from, until int64) []model.Packet
+	GetUniqueMACCountBySnifferBetweenDates(snifferMAC string, from, until int64) int
 }
 
 type PacketAPI struct {

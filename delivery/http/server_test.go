@@ -24,6 +24,7 @@ type IntegrationSuite struct {
 	suite.Suite
 	server *httptest.Server
 	clock  clock.Clock
+	db     Database
 }
 
 func TestIntegrationSuite(t *testing.T) {
@@ -35,12 +36,22 @@ func (s *IntegrationSuite) BeforeTest(string, string) {
 	mockClock.Add(12 * time.Hour)
 	s.clock = mockClock
 	tick = mockClock
-	server := Create(&test.InMemoryDB{})
+	s.db = &test.InMemoryDB{}
+	server := Create(s.db)
 	s.server = httptest.NewServer(server)
 }
 
 func (s *IntegrationSuite) AfterTest(string, string) {
 	s.server.Close()
+}
+
+func (s *IntegrationSuite) setCurrentTime(time time.Time) {
+	mockClock := clock.NewMock()
+	mockClock.Set(time)
+	tick = mockClock
+	s.clock = mockClock
+	server := Create(s.db)
+	s.server = httptest.NewServer(server)
 }
 
 func (s *IntegrationSuite) TestCreateSniffer() {
@@ -80,7 +91,7 @@ func (s *IntegrationSuite) TestUpdateSniffer() {
 	assert.Equal(s.T(), expectedSniffers, actualSniffers)
 }
 
-func (s *IntegrationSuite) TestGetCrowd() {
+func (s *IntegrationSuite) TestGetCurrentCrowd() {
 	snifferMAC := "01:01:01:01:01:01"
 	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
@@ -99,11 +110,12 @@ func (s *IntegrationSuite) TestGetCrowd() {
 		s.sendCreatePacketRequest(snifferMAC, string(packetJSON))
 	}
 
-	actualCrowd := s.sendGetCrowdRequest(now, snifferMAC)
-	expectedCrowd := 2
-	assert.Equal(s.T(), expectedCrowd, actualCrowd.Count)
+	actualCrowd := s.sendGetCurrentCrowdRequest(snifferMAC)
+	expectedCrowd := []model.Crowd{{Count: 2, Time: now}}
+	assert.Equal(s.T(), expectedCrowd, actualCrowd)
 
 	now = now.Add(1 * time.Minute)
+	s.setCurrentTime(now)
 	packets = []model.Packet{
 		{MAC: "CC:FF:CC:FF:CC:FF", Timestamp: now.Add(-35 * time.Second).Unix(), RSSI: 44},
 		{MAC: "DD:CC:DD:CC:DD:CC", Timestamp: now.Add(-25 * time.Second).Unix(), RSSI: 23.4},
@@ -112,10 +124,39 @@ func (s *IntegrationSuite) TestGetCrowd() {
 	packetsJSON, _ := json.Marshal(packets)
 	s.sendCreatePacketsRequest(snifferMAC, string(packetsJSON))
 
-	actualCrowd = s.sendGetCrowdRequest(now, snifferMAC)
-	expectedCrowd = 4
+	actualCrowd = s.sendGetCurrentCrowdRequest(snifferMAC)
+	expectedCrowd = []model.Crowd{{Count: 4, Time: now}}
 
-	assert.Equal(s.T(), expectedCrowd, actualCrowd.Count)
+	assert.Equal(s.T(), expectedCrowd, actualCrowd)
+}
+
+func (s *IntegrationSuite) TestGetCrowdBetweenDates() {
+	snifferMAC := "01:01:01:01:01:01"
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	s.sendCreateSnifferRequest(snifferPayload)
+
+	now := s.clock.Now()
+	packets := []model.Packet{
+		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-15 * time.Second).Unix(), RSSI: 23.4},
+		{MAC: "00:11:CC:CC:44:55", Timestamp: now.Add(-10 * time.Second).Unix(), RSSI: 44},
+		{MAC: "CC:BB:22:11:44:55", Timestamp: now.Add(-7 * time.Second).Unix(), RSSI: 333},
+		{MAC: "DD:BB:22:11:44:55", Timestamp: now.Add(-5 * time.Second).Unix(), RSSI: 1.2232},
+		{MAC: "EE:BB:22:11:44:55", Timestamp: now.Unix(), RSSI: 1.2},
+	}
+
+	for _, packet := range packets {
+		packetJSON, _ := json.Marshal(packet)
+		s.sendCreatePacketRequest(snifferMAC, string(packetJSON))
+	}
+
+	from := now.Add(-20 * time.Second)
+	until := now.Add(-8 * time.Second)
+	forEvery := 10 * time.Second
+	actualCrowd := s.sendGetCrowdBetweenDatesRequest(from, until, forEvery, snifferMAC)
+	expectedCrowd := []model.Crowd{
+		{Count: 0, Time: from}, {Count: 2, Time: from.Add(forEvery)}, {Count: 2, Time: until},
+	}
+	assert.Equal(s.T(), expectedCrowd, actualCrowd)
 }
 
 func (s *IntegrationSuite) TestGetTime() {
@@ -149,15 +190,29 @@ func (s *IntegrationSuite) sendGetTimeRequest() model.Time {
 	return t
 }
 
-func (s *IntegrationSuite) sendGetCrowdRequest(since time.Time, snifferMAC string) model.Crowd {
+func (s *IntegrationSuite) sendGetCurrentCrowdRequest(snifferMAC string) []model.Crowd {
 	resource := fmt.Sprintf("sniffers/%s/crowd", url.QueryEscape(snifferMAC))
 	req := s.newRequest(http.MethodGet, resource, "")
 
-	testutil.AddGetCrowdRequestHeaders(req, since)
+	// testutil.AddGetCurrentCrowdQueries(req, since)
 	res, err := client.Do(req)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
-	var crowd model.Crowd
+	var crowd []model.Crowd
+	json.NewDecoder(res.Body).Decode(&crowd)
+
+	return crowd
+}
+
+func (s *IntegrationSuite) sendGetCrowdBetweenDatesRequest(from, until time.Time, forEvery time.Duration, snifferMAC string) []model.Crowd {
+	resource := fmt.Sprintf("sniffers/%s/crowd", url.QueryEscape(snifferMAC))
+	req := s.newRequest(http.MethodGet, resource, "")
+	testutil.AddGetCrowdBetweenDatesQueries(req, from, until, forEvery)
+	res, err := client.Do(req)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
+
+	var crowd []model.Crowd
 	json.NewDecoder(res.Body).Decode(&crowd)
 
 	return crowd

@@ -45,7 +45,7 @@ func createSnifferEndpoints(e *echo.Echo, db Database) {
 }
 
 func createCrowdEndpoints(e *echo.Echo, db Database) {
-	crowdAPI := api.CreateCrowdAPI(db)
+	crowdAPI := api.CreateCrowdAPI(db, api.SetCrowdClock(tick))
 	e.GET(crowdEndpoint, crowdAPI.GetCrowd)
 }
 

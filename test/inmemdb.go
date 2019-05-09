@@ -24,20 +24,34 @@ func (i *InMemoryDB) GetPacketsBySniffer(snifferMAC string) []model.Packet {
 			filteredPackets = append(filteredPackets, packet)
 		}
 	}
-
 	return filteredPackets
 }
 
 func (i *InMemoryDB) GetPacketsBySnifferSince(snifferMAC string, since int64) []model.Packet {
 	filteredPackets := []model.Packet{}
 
-	for _, packet := range i.Packets {
-		if packet.SnifferMAC == snifferMAC && packet.Timestamp >= since {
+	for _, packet := range i.GetPacketsBySniffer(snifferMAC) {
+		if packet.Timestamp >= since {
 			filteredPackets = append(filteredPackets, packet)
 		}
 	}
-
 	return sortByPacketsTime(filteredPackets)
+}
+
+func (i *InMemoryDB) GetPacketsBySnifferBetweenDates(snifferMAC string, from, until int64) []model.Packet {
+	filteredPackets := []model.Packet{}
+
+	for _, packet := range i.GetPacketsBySniffer(snifferMAC) {
+		if packet.Timestamp >= from && packet.Timestamp <= until {
+			filteredPackets = append(filteredPackets, packet)
+		}
+	}
+	return sortByPacketsTime(filteredPackets)
+}
+
+func (i *InMemoryDB) GetUniqueMACCountBySnifferBetweenDates(snifferMAC string, from, until int64) int {
+	filteredPackets := i.GetPacketsBySnifferBetweenDates(snifferMAC, from, until)
+	return countUniqueMACAddresses(filteredPackets)
 }
 
 func (i *InMemoryDB) CreateSniffer(sniffer *model.Sniffer) error {
@@ -68,6 +82,13 @@ func sortByPacketsTime(s []model.Packet) []model.Packet {
 		}
 		return false
 	})
-
 	return sc
+}
+
+func countUniqueMACAddresses(packets []model.Packet) int {
+	uniqueMACs := make(map[string]bool)
+	for _, packet := range packets {
+		uniqueMACs[packet.MAC] = true
+	}
+	return len(uniqueMACs)
 }

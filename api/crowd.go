@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/benbjohnson/clock"
+
 	"github.com/cyucelen/wirect/model"
 	"github.com/labstack/echo"
 )
@@ -17,47 +19,78 @@ type CrowdDatabase interface {
 }
 
 type CrowdAPI struct {
-	DB       CrowdDatabase
-	Interval time.Duration
+	DB                CrowdDatabase
+	Interval          time.Duration
+	intervalInSeconds int64
+	clock             clock.Clock
 }
 
 const defaultCalculationInterval = 5 * time.Minute
 
 func CreateCrowdAPI(db CrowdDatabase, options ...Option) *CrowdAPI {
-	crowdAPI := &CrowdAPI{DB: db, Interval: defaultCalculationInterval}
+	crowdAPI := &CrowdAPI{DB: db, Interval: defaultCalculationInterval, clock: clock.New()}
 
 	for i := range options {
 		options[i](crowdAPI)
 	}
 
+	crowdAPI.intervalInSeconds = int64(crowdAPI.Interval / time.Second)
+
 	return crowdAPI
 }
 
 func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
+	now := c.clock.Now()
 	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
-	since, _ := strconv.ParseInt(ctx.QueryParam("since"), 10, 64)
 
-	intervalInSeconds := int64(c.Interval / time.Second)
-	packets := c.DB.GetPacketsBySnifferSince(snifferMAC, since-intervalInSeconds)
+	params := ctx.QueryParams()
+	from, fromExists := params["from"]
+	until, untilExists := params["until"]
+	forEvery, forExists := params["for"]
 
-	crowd := model.Crowd{Count: getUniquePersonCount(packets)}
+	if fromExists && untilExists && forExists {
+		c.getCrowdBetweenDates(ctx, snifferMAC, from[0], until[0], forEvery[0])
+	}
+
+	count := c.DB.GetUniqueMACCountBySnifferBetweenDates(snifferMAC, now.Unix()-c.intervalInSeconds, now.Unix())
+	crowd := []model.Crowd{{Count: count, Time: now}}
 	ctx.JSON(http.StatusOK, crowd)
 
 	return nil
 }
 
-func getUniquePersonCount(packets []model.Packet) int {
-	uniquePerson := make(map[string]bool)
+func (c *CrowdAPI) getCrowdBetweenDates(ctx echo.Context, snifferMAC, from, until, forEvery string) error {
+	fromUnix, _ := strconv.ParseInt(from, 10, 64)
+	untilUnix, _ := strconv.ParseInt(until, 10, 64)
+	forEverySeconds, _ := strconv.ParseInt(forEvery, 10, 64)
 
-	for _, packet := range packets {
-		uniquePerson[packet.MAC] = true
+	crowd := []model.Crowd{}
+
+	for t := fromUnix; t < untilUnix; t += forEverySeconds {
+		crowd = append(crowd, c.getCrowd(snifferMAC, t))
 	}
+	crowd = append(crowd, c.getCrowd(snifferMAC, untilUnix))
+	ctx.JSON(http.StatusOK, crowd)
 
-	return len(uniquePerson)
+	return nil
+}
+
+func (c *CrowdAPI) getCrowd(snifferMAC string, when int64) model.Crowd {
+	count := c.DB.GetUniqueMACCountBySnifferBetweenDates(snifferMAC, when-c.intervalInSeconds, when)
+	return model.Crowd{
+		Count: count,
+		Time:  time.Unix(when, 0),
+	}
 }
 
 func SetCrowdCalculationInterval(interval time.Duration) Option {
 	return func(crowdAPI *CrowdAPI) {
 		crowdAPI.Interval = interval
+	}
+}
+
+func SetCrowdClock(clock clock.Clock) Option {
+	return func(crowdAPI *CrowdAPI) {
+		crowdAPI.clock = clock
 	}
 }
