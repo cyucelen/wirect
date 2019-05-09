@@ -46,7 +46,7 @@ func CreateCrowdAPI(db CrowdDatabase, options ...Option) *CrowdAPI {
 }
 
 func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
-	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
+	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC")) // TODO: test error case
 	params := c.getCrowdParams(ctx)
 	crowd := c.getCrowdBetweenDates(ctx, snifferMAC, params.from, params.until, params.forEverySecond)
 	ctx.JSON(http.StatusOK, crowd)

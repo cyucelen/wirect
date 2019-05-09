@@ -18,7 +18,7 @@ const sniffersEndpoint = "/sniffers"
 const packetsEndpoint = sniffersEndpoint + snifferMACParam + "/packets"
 const packetsCollectionEndpoint = sniffersEndpoint + snifferMACParam + "/packets-collection"
 const updateSnifferEndpoint = sniffersEndpoint + snifferMACParam
-const crowdEndpoint = sniffersEndpoint + snifferMACParam + "/crowd"
+const crowdEndpoint = sniffersEndpoint + snifferMACParam + "/stats/crowd"
 const timeEndpoint = "/time"
 
 func Create(db Database) *echo.Echo {
