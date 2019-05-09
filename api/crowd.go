@@ -25,6 +25,12 @@ type CrowdAPI struct {
 	clock             clock.Clock
 }
 
+type CrowdParams struct {
+	from           int64
+	until          int64
+	forEverySecond int64
+}
+
 const defaultCalculationInterval = 5 * time.Minute
 
 func CreateCrowdAPI(db CrowdDatabase, options ...Option) *CrowdAPI {
@@ -40,39 +46,22 @@ func CreateCrowdAPI(db CrowdDatabase, options ...Option) *CrowdAPI {
 }
 
 func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
-	now := c.clock.Now()
 	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
-
-	params := ctx.QueryParams()
-	from, fromExists := params["from"]
-	until, untilExists := params["until"]
-	forEvery, forExists := params["for"]
-
-	if fromExists && untilExists && forExists {
-		c.getCrowdBetweenDates(ctx, snifferMAC, from[0], until[0], forEvery[0])
-	}
-
-	count := c.DB.GetUniqueMACCountBySnifferBetweenDates(snifferMAC, now.Unix()-c.intervalInSeconds, now.Unix())
-	crowd := []model.Crowd{{Count: count, Time: now}}
+	params := c.getCrowdParams(ctx)
+	crowd := c.getCrowdBetweenDates(ctx, snifferMAC, params.from, params.until, params.forEverySecond)
 	ctx.JSON(http.StatusOK, crowd)
-
 	return nil
 }
 
-func (c *CrowdAPI) getCrowdBetweenDates(ctx echo.Context, snifferMAC, from, until, forEvery string) error {
-	fromUnix, _ := strconv.ParseInt(from, 10, 64)
-	untilUnix, _ := strconv.ParseInt(until, 10, 64)
-	forEverySeconds, _ := strconv.ParseInt(forEvery, 10, 64)
-
+func (c *CrowdAPI) getCrowdBetweenDates(ctx echo.Context, snifferMAC string, from, until, forEverySeconds int64) []model.Crowd {
 	crowd := []model.Crowd{}
 
-	for t := fromUnix; t < untilUnix; t += forEverySeconds {
+	for t := from; t < until; t += forEverySeconds {
 		crowd = append(crowd, c.getCrowd(snifferMAC, t))
 	}
-	crowd = append(crowd, c.getCrowd(snifferMAC, untilUnix))
-	ctx.JSON(http.StatusOK, crowd)
+	crowd = append(crowd, c.getCrowd(snifferMAC, until))
 
-	return nil
+	return crowd
 }
 
 func (c *CrowdAPI) getCrowd(snifferMAC string, when int64) model.Crowd {
@@ -81,6 +70,28 @@ func (c *CrowdAPI) getCrowd(snifferMAC string, when int64) model.Crowd {
 		Count: count,
 		Time:  time.Unix(when, 0),
 	}
+}
+
+func (c *CrowdAPI) getCrowdParams(ctx echo.Context) CrowdParams {
+	params := ctx.QueryParams()
+	from, fromExists := params["from"]
+	until, untilExists := params["until"]
+	forEvery, forExists := params["for"]
+
+	crowdParams := CrowdParams{}
+
+	if fromExists && untilExists && forExists {
+		crowdParams.from, _ = strconv.ParseInt(from[0], 10, 64)
+		crowdParams.until, _ = strconv.ParseInt(until[0], 10, 64)
+		crowdParams.forEverySecond, _ = strconv.ParseInt(forEvery[0], 10, 64)
+		return crowdParams
+	}
+
+	now := c.clock.Now().Unix()
+
+	crowdParams.from = now
+	crowdParams.until = now
+	return crowdParams
 }
 
 func SetCrowdCalculationInterval(interval time.Duration) Option {
