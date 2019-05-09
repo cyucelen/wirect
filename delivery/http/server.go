@@ -18,14 +18,16 @@ const sniffersEndpoint = "/sniffers"
 const packetsEndpoint = sniffersEndpoint + snifferMACParam + "/packets"
 const packetsCollectionEndpoint = sniffersEndpoint + snifferMACParam + "/packets-collection"
 const updateSnifferEndpoint = sniffersEndpoint + snifferMACParam
-const crowdEndpoint = sniffersEndpoint + snifferMACParam + "/stats/crowd"
+const statsEndpoint = sniffersEndpoint + snifferMACParam + "/stats"
+const crowdEndpoint = statsEndpoint + "/crowd"
+const dailyTotalSniffedMACEndpoint = statsEndpoint + "/total-sniffed/daily"
 const timeEndpoint = "/time"
 
 func Create(db Database) *echo.Echo {
 	e := echo.New()
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
-	createCrowdEndpoints(e, db)
+	createStatsEndpoints(e, db)
 	createTimeEndpoint(e)
 
 	return e
@@ -44,9 +46,10 @@ func createSnifferEndpoints(e *echo.Echo, db Database) {
 	e.PUT(updateSnifferEndpoint, snifferAPI.UpdateSniffer)
 }
 
-func createCrowdEndpoints(e *echo.Echo, db Database) {
+func createStatsEndpoints(e *echo.Echo, db Database) {
 	crowdAPI := api.CreateCrowdAPI(db, api.SetCrowdClock(tick))
 	e.GET(crowdEndpoint, crowdAPI.GetCrowd)
+	e.GET(dailyTotalSniffedMACEndpoint, crowdAPI.GetTotalSniffedMACDaily)
 }
 
 func createTimeEndpoint(e *echo.Echo) {

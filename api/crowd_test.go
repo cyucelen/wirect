@@ -81,6 +81,30 @@ func TestGetCrowdBetweenDates(t *testing.T) {
 	assert.Equal(t, expectedCrowd, actualCrowd)
 }
 
+func TestGetTotalSniffedMACDaily(t *testing.T) {
+	mockClock := clock.NewMock()
+	mockClock.Add(1 * time.Hour)
+	now := mockClock.Now()
+	snifferMAC := "11:22:00:33:44:55"
+	mockPacketDB := createDBContainsPacketsOfTwoUniquePerson(now, snifferMAC)
+
+	crowdAPI := CreateCrowdAPI(mockPacketDB, SetCrowdClock(mockClock), SetCrowdCalculationInterval(5*time.Minute))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	c, rec := createTestContext(req)
+	c.SetPath("/sniffers/:snifferMAC/stats/total-sniffed/daily")
+	c.SetParamNames("snifferMAC")
+	c.SetParamValues(url.QueryEscape(snifferMAC))
+	crowdAPI.GetTotalSniffedMACDaily(c)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var actualTotalSniffed model.TotalSniffed
+	json.NewDecoder(rec.Body).Decode(&actualTotalSniffed)
+	expectedTotalSniffed := model.TotalSniffed{Count: 2}
+	assert.Equal(t, expectedTotalSniffed, actualTotalSniffed)
+}
+
 func createDBContainsPacketsOfTwoUniquePerson(now time.Time, snifferMAC string) *test.InMemoryDB {
 	db := &test.InMemoryDB{}
 
@@ -111,7 +135,7 @@ func createDBContainsPacketsOfTwoUniquePerson(now time.Time, snifferMAC string) 
 		},
 		{
 			MAC:        "AA:BB:22:11:44:55",
-			Timestamp:  now.Unix(), // 03:00:00
+			Timestamp:  now.Add(25 * time.Hour).Unix(), // 03:00:00
 			RSSI:       1.2,
 			SnifferMAC: snifferMAC,
 		},

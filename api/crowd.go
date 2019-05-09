@@ -53,6 +53,14 @@ func (c *CrowdAPI) GetCrowd(ctx echo.Context) error {
 	return nil
 }
 
+func (c *CrowdAPI) GetTotalSniffedMACDaily(ctx echo.Context) error {
+	snifferMAC, _ := url.QueryUnescape(ctx.Param("snifferMAC"))
+	now := c.clock.Now()
+	totalSniffedCount := c.DB.GetUniqueMACCountBySnifferBetweenDates(snifferMAC, now.AddDate(0, 0, -1).Unix(), now.Unix())
+	ctx.JSON(http.StatusOK, model.TotalSniffed{Count: totalSniffedCount})
+	return nil
+}
+
 func (c *CrowdAPI) getCrowdBetweenDates(ctx echo.Context, snifferMAC string, from, until, forEverySeconds int64) []model.Crowd {
 	crowd := []model.Crowd{}
 
