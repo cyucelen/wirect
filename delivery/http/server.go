@@ -28,7 +28,7 @@ func Create(db Database) *echo.Echo {
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
 	createStatsEndpoints(e, db)
-	createRoutersEndpoint(e, db)
+	createRouterEndpoint(e, db)
 	createTimeEndpoint(e)
 
 	return e
@@ -53,7 +53,7 @@ func createStatsEndpoints(e *echo.Echo, db Database) {
 	e.GET(dailyTotalSniffedMACEndpoint, crowdAPI.GetTotalSniffedMACDaily)
 }
 
-func createRoutersEndpoint(e *echo.Echo, db Database) {
+func createRouterEndpoint(e *echo.Echo, db Database) {
 	routerAPI := api.RouterAPI{DB: db}
 	e.POST(routersEndpoint, routerAPI.CreateRouters)
 	e.GET(routersEndpoint, routerAPI.GetRouters)
