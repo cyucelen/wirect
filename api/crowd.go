@@ -95,10 +95,11 @@ func (c *CrowdAPI) getCrowdParams(ctx echo.Context) CrowdParams {
 		return crowdParams
 	}
 
-	now := c.clock.Now().Unix()
+	now := c.clock.Now()
 
-	crowdParams.from = now
-	crowdParams.until = now
+	crowdParams.from = now.Add(-10 * time.Minute).Unix()
+	crowdParams.until = now.Unix()
+	crowdParams.forEverySecond = 60
 	return crowdParams
 }
 
