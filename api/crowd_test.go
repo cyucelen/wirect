@@ -47,7 +47,7 @@ func TestGetCurrentCrowd(t *testing.T) {
 	var actualCrowd []model.Crowd
 	json.NewDecoder(rec.Body).Decode(&actualCrowd)
 	expectedCrowd := []model.Crowd{{Count: 2, Time: now}}
-	assert.Equal(t, expectedCrowd, actualCrowd)
+	assert.Equal(t, expectedCrowd[0], actualCrowd[len(actualCrowd)-1])
 }
 
 func TestGetCrowdBetweenDates(t *testing.T) {

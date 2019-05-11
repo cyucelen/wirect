@@ -112,7 +112,7 @@ func (s *IntegrationSuite) TestGetCurrentCrowd() {
 
 	actualCrowd := s.sendGetCurrentCrowdRequest(snifferMAC)
 	expectedCrowd := []model.Crowd{{Count: 2, Time: now}}
-	assert.Equal(s.T(), expectedCrowd, actualCrowd)
+	assert.Equal(s.T(), expectedCrowd[0], actualCrowd[len(actualCrowd)-1])
 
 	now = now.Add(1 * time.Minute)
 	s.setCurrentTime(now)
@@ -127,7 +127,7 @@ func (s *IntegrationSuite) TestGetCurrentCrowd() {
 	actualCrowd = s.sendGetCurrentCrowdRequest(snifferMAC)
 	expectedCrowd = []model.Crowd{{Count: 4, Time: now}}
 
-	assert.Equal(s.T(), expectedCrowd, actualCrowd)
+	assert.Equal(s.T(), expectedCrowd[0], actualCrowd[len(actualCrowd)-1])
 }
 
 func (s *IntegrationSuite) TestGetCrowdBetweenDates() {
