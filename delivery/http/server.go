@@ -14,14 +14,13 @@ type Database interface {
 
 var tick = clock.New()
 
-const snifferMACParam = "/:snifferMAC"
+const packetsEndpoint = "/sniffers/:snifferMAC/packets"
+const packetsCollectionEndpoint = "/sniffers/:snifferMAC/packets-collection"
 const sniffersEndpoint = "/sniffers"
-const packetsEndpoint = sniffersEndpoint + snifferMACParam + "/packets"
-const packetsCollectionEndpoint = sniffersEndpoint + snifferMACParam + "/packets-collection"
-const updateSnifferEndpoint = sniffersEndpoint + snifferMACParam
-const statsEndpoint = sniffersEndpoint + snifferMACParam + "/stats"
-const crowdEndpoint = statsEndpoint + "/crowd"
-const dailyTotalSniffedMACEndpoint = statsEndpoint + "/total-sniffed/daily"
+const routersEndpoint = "/sniffers/:snifferMAC/routers"
+const updateSnifferEndpoint = "/sniffers/:snifferMAC"
+const crowdEndpoint = "/sniffers/:snifferMAC/stats/crowd"
+const dailyTotalSniffedMACEndpoint = "/sniffers/:snifferMAC/stats/total-sniffed/daily"
 const timeEndpoint = "/time"
 
 func Create(db Database) *echo.Echo {
@@ -29,7 +28,7 @@ func Create(db Database) *echo.Echo {
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
 	createStatsEndpoints(e, db)
-	createRouterEnpoint(e, db)
+	createRoutersEndpoint(e, db)
 	createTimeEndpoint(e)
 
 	return e
@@ -54,10 +53,10 @@ func createStatsEndpoints(e *echo.Echo, db Database) {
 	e.GET(dailyTotalSniffedMACEndpoint, crowdAPI.GetTotalSniffedMACDaily)
 }
 
-func createRouterEnpoint(e *echo.Echo, db Database) {
+func createRoutersEndpoint(e *echo.Echo, db Database) {
 	routerAPI := api.RouterAPI{DB: db}
-	e.POST("/sniffers/:snifferMAC/routers", routerAPI.CreateRouters)
-	e.GET("/sniffers/:snifferMAC/routers", routerAPI.GetRouters)
+	e.POST(routersEndpoint, routerAPI.CreateRouters)
+	e.GET(routersEndpoint, routerAPI.GetRouters)
 }
 
 func createTimeEndpoint(e *echo.Echo) {
