@@ -185,6 +185,23 @@ func (s *IntegrationSuite) TestGetTotalSniffedMACDaily() {
 	assert.Equal(s.T(), expectedTotalSniffed, actualTotalSniffed)
 }
 
+func (s *IntegrationSuite) TestGetRouters() {
+	snifferMAC := "01:01:01:01:01:01"
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	s.sendCreateSnifferRequest(snifferPayload)
+
+	routers := []model.RouterExternal{
+		{MAC: "00:FF:AA:CC:DD:FF", SSID: "2020"},
+		{MAC: "00:AA:AA:FF:FF:FF", SSID: "1010"},
+	}
+
+	routersJSON, _ := json.Marshal(routers)
+	s.sendCreateRoutersRequest(snifferMAC, string(routersJSON))
+
+	actualRouters := s.sendGetRoutersRequest(snifferMAC)
+	assert.Equal(s.T(), routers, actualRouters)
+}
+
 func (s *IntegrationSuite) TestGetTime() {
 	expectedTime := s.clock.Now().Unix()
 	actualTime := s.sendGetTimeRequest()
@@ -220,7 +237,6 @@ func (s *IntegrationSuite) sendGetCurrentCrowdRequest(snifferMAC string) []model
 	resource := fmt.Sprintf("sniffers/%s/stats/crowd", url.QueryEscape(snifferMAC))
 	req := s.newRequest(http.MethodGet, resource, "")
 
-	// testutil.AddGetCurrentCrowdQueries(req, since)
 	res, err := client.Do(req)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
@@ -305,6 +321,23 @@ func (s *IntegrationSuite) sendCreateSnifferRequest(payload string) {
 	json.NewDecoder(strings.NewReader(payload)).Decode(&expectedResponse)
 	assert.Equal(s.T(), expectedResponse, actualResponse)
 	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
+}
+
+func (s *IntegrationSuite) sendCreateRoutersRequest(snifferMAC, payload string) {
+	resource := fmt.Sprintf("sniffers/%s/routers", url.QueryEscape(snifferMAC))
+	res := s.sendRequest(http.MethodPost, resource, payload)
+	assert.Equal(s.T(), http.StatusCreated, res.StatusCode)
+}
+
+func (s *IntegrationSuite) sendGetRoutersRequest(snifferMAC string) []model.RouterExternal {
+	resource := fmt.Sprintf("sniffers/%s/routers", url.QueryEscape(snifferMAC))
+	res := s.sendRequest(http.MethodGet, resource, "")
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
+
+	var routers []model.RouterExternal
+	json.NewDecoder(res.Body).Decode(&routers)
+
+	return routers
 }
 
 func (s *IntegrationSuite) sendUpdateSnifferRequest(snifferMAC, payload string) {

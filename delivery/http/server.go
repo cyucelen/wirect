@@ -9,6 +9,7 @@ import (
 type Database interface {
 	api.PacketDatabase
 	api.SnifferDatabase
+	api.RouterDatabase
 }
 
 var tick = clock.New()
@@ -28,6 +29,7 @@ func Create(db Database) *echo.Echo {
 	createPacketEndpoints(e, db)
 	createSnifferEndpoints(e, db)
 	createStatsEndpoints(e, db)
+	createRouterEnpoint(e, db)
 	createTimeEndpoint(e)
 
 	return e
@@ -50,6 +52,12 @@ func createStatsEndpoints(e *echo.Echo, db Database) {
 	crowdAPI := api.CreateCrowdAPI(db, api.SetCrowdClock(tick))
 	e.GET(crowdEndpoint, crowdAPI.GetCrowd)
 	e.GET(dailyTotalSniffedMACEndpoint, crowdAPI.GetTotalSniffedMACDaily)
+}
+
+func createRouterEnpoint(e *echo.Echo, db Database) {
+	routerAPI := api.RouterAPI{DB: db}
+	e.POST("/sniffers/:snifferMAC/routers", routerAPI.CreateRouters)
+	e.GET("/sniffers/:snifferMAC/routers", routerAPI.GetRouters)
 }
 
 func createTimeEndpoint(e *echo.Echo) {

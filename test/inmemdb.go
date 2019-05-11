@@ -9,6 +9,7 @@ import (
 type InMemoryDB struct {
 	Packets  []model.Packet
 	Sniffers []model.Sniffer
+	Routers  []model.Router
 }
 
 func (i *InMemoryDB) CreatePacket(packet *model.Packet) error {
@@ -70,6 +71,21 @@ func (i *InMemoryDB) UpdateSniffer(sniffer *model.Sniffer) error {
 		}
 	}
 	return nil
+}
+
+func (i *InMemoryDB) CreateRouter(router *model.Router) error {
+	i.Routers = append(i.Routers, *router)
+	return nil
+}
+
+func (i *InMemoryDB) GetRoutersBySniffer(snifferMAC string) []model.Router {
+	filteredRouters := []model.Router{}
+	for _, router := range i.Routers {
+		if router.SnifferMAC == snifferMAC {
+			filteredRouters = append(filteredRouters, router)
+		}
+	}
+	return filteredRouters
 }
 
 func sortByPacketsTime(s []model.Packet) []model.Packet {

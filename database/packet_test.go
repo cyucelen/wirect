@@ -10,16 +10,21 @@ import (
 )
 
 func (s *DatabaseSuite) TestCreatePacket() {
+	snifferMAC := "00:00:00:00:00:00"
 	packets := []model.Packet{
 		{MAC: "00:11:22:33:44:55", Timestamp: time.Now().UTC().Unix(), RSSI: 1234, SnifferMAC: "00:00:00:00:00:00"},
 		{MAC: "00:33:22:11:44:55", Timestamp: time.Now().UTC().Add(10 * time.Second).Unix(), RSSI: 333, SnifferMAC: "00:00:00:00:00:00"},
 	}
 
-	var lastPacketInDB model.Packet
 	for _, packet := range packets {
 		s.db.CreatePacket(&packet)
-		s.db.DB.Last(&lastPacketInDB)
-		assert.ObjectsAreEqualValues(packet, lastPacketInDB)
+	}
+
+	var actualPackets []model.Packet
+	s.db.DB.Order("timestamp asc").Where("sniffer_mac = ?", snifferMAC).Find(&actualPackets)
+	for i, packet := range actualPackets {
+		packet.ID = 0
+		assert.Equal(s.T(), packets[i], packet)
 	}
 
 	var packetsInDB []model.Packet
