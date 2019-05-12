@@ -122,7 +122,7 @@ func (s *DatabaseSuite) TestCountUniqueMACAddressesBySnifferBetweenDates() {
 	now := mockClock.Now().UTC().Add(20 * time.Minute)
 
 	from := now.Add(-10 * time.Minute)
-	until := now.Add(2 * time.Minute)
+	until := now.Add(6 * time.Minute)
 
 	packets := []model.Packet{
 		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(-10 * time.Minute).Unix(), RSSI: 123, SnifferMAC: snifferOne},
@@ -130,6 +130,7 @@ func (s *DatabaseSuite) TestCountUniqueMACAddressesBySnifferBetweenDates() {
 		{MAC: "CC:BB:FA:AE:FC:6C", Timestamp: now.Unix(), RSSI: 333, SnifferMAC: snifferOne},
 		{MAC: "FF:FB:44:21:64:25", Timestamp: now.Add(1 * time.Second).Unix(), RSSI: 333, SnifferMAC: snifferOne},
 		{MAC: "AA:BB:22:11:44:55", Timestamp: now.Add(5 * time.Minute).Unix(), RSSI: 333, SnifferMAC: snifferOne},
+		{MAC: "A2:CC:F2:D1:E4:F5", Timestamp: now.Add(7 * time.Minute).Unix(), RSSI: 333, SnifferMAC: snifferOne},
 	}
 	for _, packet := range packets {
 		s.db.CreatePacket(&packet)

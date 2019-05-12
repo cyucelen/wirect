@@ -28,6 +28,6 @@ func (g *GormDatabase) GetPacketsBySnifferBetweenDates(snifferMAC string, from, 
 
 func (g *GormDatabase) GetUniqueMACCountBySnifferBetweenDates(snifferMAC string, from, until int64) int {
 	count := 0
-	g.DB.Select("DISTINCT mac").Where("sniffer_mac = ? AND timestamp between ? AND ?", snifferMAC, from, until).Find(new(model.Packet)).Count(&count)
+	g.DB.Where("sniffer_mac = ? AND timestamp between ? AND ?", snifferMAC, from, until).Select("count(distinct(mac))").Find(new(model.Packet)).Count(&count)
 	return count
 }
