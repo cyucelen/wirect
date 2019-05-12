@@ -6,7 +6,7 @@ import (
 )
 
 func (s *DatabaseSuite) TestCreateRouter() {
-	router := model.Router{MAC: "00:11:22:33:44:55", SSID: "2020", SnifferMAC: "11:11:22:22:33:33"}
+	router := model.Router{SSID: "2020", SnifferMAC: "11:11:22:22:33:33", LastSeen: 1000}
 	s.db.CreateRouter(&router)
 
 	var actualRouter model.Router
@@ -18,10 +18,10 @@ func (s *DatabaseSuite) TestCreateRouter() {
 func (s *DatabaseSuite) TestGetRoutersBySniffer() {
 	snifferMAC := "00:00:00:00:00:00"
 	routers := []model.Router{
-		{MAC: "11:22:33:44:55:66", SSID: "2020", SnifferMAC: snifferMAC},
-		{MAC: "22:33:44:55:66:77", SSID: "1010", SnifferMAC: snifferMAC},
-		{MAC: "AA:BB:CC:DD:EE:FF", SSID: "Arch", SnifferMAC: snifferMAC},
-		{MAC: "FF:AA:BB:FF:CC:DD", SSID: "dont h@ck m3", SnifferMAC: snifferMAC},
+		{SSID: "2020", SnifferMAC: snifferMAC},
+		{SSID: "1010", SnifferMAC: snifferMAC},
+		{SSID: "Arch", SnifferMAC: snifferMAC},
+		{SSID: "dont h@ck m3", SnifferMAC: snifferMAC},
 	}
 
 	for _, router := range routers {

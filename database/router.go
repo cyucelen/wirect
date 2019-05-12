@@ -1,9 +1,11 @@
 package database
 
-import "github.com/cyucelen/wirect/model"
+import (
+	"github.com/cyucelen/wirect/model"
+)
 
 func (g *GormDatabase) CreateRouter(router *model.Router) error {
-	return g.DB.Create(router).Error
+	return g.DB.Save(router).Error
 }
 
 func (g *GormDatabase) GetRoutersBySniffer(snifferMAC string) []model.Router {

@@ -18,7 +18,7 @@ func main() {
 
 	e := server.Create(db)
 
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},

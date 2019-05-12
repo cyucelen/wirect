@@ -1,10 +1,10 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/cyucelen/wirect/model"
+	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 )
 
@@ -24,19 +24,14 @@ func (r *RouterAPI) CreateRouters(ctx echo.Context) error {
 		return err
 	}
 
+	ffmt.Puts(routers)
+
 	snifferMAC, err := getSnifferMAC(ctx)
 	if err != nil {
 		return err
 	}
 
-	validRouters := filterValidRouters(routers)
-
-	if len(validRouters) == 0 {
-		ctx.JSON(http.StatusBadRequest, nil)
-		return errors.New("")
-	}
-
-	for _, router := range validRouters {
+	for _, router := range routers {
 		internalRouter := toInternalRouter(snifferMAC, &router)
 		if err := r.DB.CreateRouter(internalRouter); err != nil {
 			ctx.JSON(http.StatusInternalServerError, nil)
@@ -44,7 +39,7 @@ func (r *RouterAPI) CreateRouters(ctx echo.Context) error {
 		}
 	}
 
-	ctx.JSON(http.StatusCreated, validRouters)
+	ctx.JSON(http.StatusCreated, routers)
 	return nil
 }
 
@@ -53,34 +48,29 @@ func (r *RouterAPI) GetRouters(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	routers := r.DB.GetRoutersBySniffer(snifferMAC)
+	externalRouters := []model.RouterExternal{}
 
-	ctx.JSON(http.StatusOK, routers)
-	return nil
-}
-
-func filterValidRouters(routers []model.RouterExternal) []model.RouterExternal {
-	validRouters := []model.RouterExternal{}
 	for _, router := range routers {
-		if router.MAC != "" {
-			validRouters = append(validRouters, router)
-		}
+		externalRouters = append(externalRouters, *toExternal(&router))
 	}
 
-	return validRouters
+	ctx.JSON(http.StatusOK, externalRouters)
+	return nil
 }
 
 func toInternalRouter(snifferMAC string, router *model.RouterExternal) *model.Router {
 	return &model.Router{
-		MAC:        router.MAC,
 		SSID:       router.SSID,
 		SnifferMAC: snifferMAC,
+		LastSeen:   router.LastSeen,
 	}
 }
 
 func toExternal(router *model.Router) *model.RouterExternal {
 	return &model.RouterExternal{
-		MAC:  router.MAC,
-		SSID: router.SSID,
+		SSID:     router.SSID,
+		LastSeen: router.LastSeen,
 	}
 }

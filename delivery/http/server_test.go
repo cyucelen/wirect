@@ -191,8 +191,8 @@ func (s *IntegrationSuite) TestGetRouters() {
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	routers := []model.RouterExternal{
-		{MAC: "00:FF:AA:CC:DD:FF", SSID: "2020"},
-		{MAC: "00:AA:AA:FF:FF:FF", SSID: "1010"},
+		{SSID: "2020", LastSeen: 1500},
+		{SSID: "1010", LastSeen: 2000},
 	}
 
 	routersJSON, _ := json.Marshal(routers)

@@ -177,9 +177,14 @@ func (s *InMemoryDBSuite) TestUpdateSniffer() {
 }
 
 func (s *InMemoryDBSuite) TestCreateRouter() {
-	router := model.Router{MAC: "00:11:22:33:44:55", SSID: "2020"}
+	router := model.Router{SSID: "2020", SnifferMAC: "00:00:00:00:00:00"}
 	s.db.CreateRouter(&router)
+	assert.Len(s.T(), s.db.Routers, 1)
+	assert.Equal(s.T(), router, s.db.Routers[0])
 
+	router.LastSeen = 2000
+	s.db.CreateRouter(&router)
+	assert.Len(s.T(), s.db.Routers, 1)
 	assert.Equal(s.T(), router, s.db.Routers[0])
 }
 
@@ -188,7 +193,7 @@ func (s *InMemoryDBSuite) TestGetRoutersBySniffer() {
 	sniffer := model.Sniffer{MAC: snifferMAC, Name: "lab_sniffer", Location: "lab"}
 	s.db.CreateSniffer(&sniffer)
 
-	router := model.Router{MAC: "00:11:22:33:44:55", SSID: "2020", SnifferMAC: snifferMAC}
+	router := model.Router{SSID: "2020", SnifferMAC: snifferMAC}
 	s.db.CreateRouter(&router)
 
 	assert.Equal(s.T(), router, s.db.GetRoutersBySniffer(snifferMAC)[0])

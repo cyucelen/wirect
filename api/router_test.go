@@ -48,8 +48,8 @@ func (s *RouterAPISuite) TestCreateRouters() {
 	routerAPI := RouterAPI{DB: db}
 
 	routers := []model.RouterExternal{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+		{SSID: "1010", LastSeen: 1000},
+		{SSID: "2020", LastSeen: 1200},
 	}
 
 	rec := sendTestRequestToHandler(defaultTestSnifferMAC, routers, routerAPI.CreateRouters, http.MethodPost)
@@ -77,38 +77,38 @@ func (s *RouterAPISuite) TestCreateRoutersWithCorruptedJSON() {
 	assert.Equal(s.T(), http.StatusBadRequest, responseStatusCode)
 }
 
-func (s *RouterAPISuite) TestCreateRoutersWithEmptyRequiredFileds() {
-	onlyNotValidRouters := []model.RouterExternal{
-		{MAC: "", SSID: "1010"},
-		{MAC: "", SSID: "2020"},
-	}
+// func (s *RouterAPISuite) TestCreateRoutersWithEmptyRequiredFileds() {
+// 	onlyNotValidRouters := []model.RouterExternal{
+// 		{MAC: "", SSID: "1010"},
+// 		{MAC: "", SSID: "2020"},
+// 	}
 
-	rec := sendTestRequestToHandler(defaultTestSnifferMAC, onlyNotValidRouters, s.routerAPI.CreateRouters, http.MethodPost)
-	assert.Len(s.T(), s.routerDB.Routers, 0)
-	assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
+// 	rec := sendTestRequestToHandler(defaultTestSnifferMAC, onlyNotValidRouters, s.routerAPI.CreateRouters, http.MethodPost)
+// 	assert.Len(s.T(), s.routerDB.Routers, 0)
+// 	assert.Equal(s.T(), http.StatusBadRequest, rec.Code)
 
-	validAndNotValidRouters := []model.RouterExternal{
-		{MAC: "", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
-	}
+// 	validAndNotValidRouters := []model.RouterExternal{
+// 		{MAC: "", SSID: "1010"},
+// 		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+// 	}
 
-	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidRouters, s.routerAPI.CreateRouters, http.MethodPost)
-	assert.Len(s.T(), s.routerDB.Routers, 1)
-	assert.Equal(s.T(), http.StatusCreated, rec.Code)
+// 	rec = sendTestRequestToHandler(defaultTestSnifferMAC, validAndNotValidRouters, s.routerAPI.CreateRouters, http.MethodPost)
+// 	assert.Len(s.T(), s.routerDB.Routers, 1)
+// 	assert.Equal(s.T(), http.StatusCreated, rec.Code)
 
-	var actualResponse []model.RouterExternal
-	json.NewDecoder(rec.Body).Decode(&actualResponse)
-	assert.Len(s.T(), actualResponse, 1)
-	assert.Equal(s.T(), validAndNotValidRouters[1], actualResponse[0])
-}
+// 	var actualResponse []model.RouterExternal
+// 	json.NewDecoder(rec.Body).Decode(&actualResponse)
+// 	assert.Len(s.T(), actualResponse, 1)
+// 	assert.Equal(s.T(), validAndNotValidRouters[1], actualResponse[0])
+// }
 
 func (s *RouterAPISuite) TestCreateRoutersWithInvalidSnifferMACParam() {
 	db := &test.InMemoryDB{}
 	routerAPI := RouterAPI{DB: db}
 
 	routers := []model.RouterExternal{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+		{SSID: "1010"},
+		{SSID: "2020"},
 	}
 
 	rec := sendTestRequestToHandlerWithInvalidParam(routers, routerAPI.CreateRouters)
@@ -120,8 +120,8 @@ func (s *RouterAPISuite) TestCreateRoutersWithFailingDB() {
 	routerAPI := RouterAPI{DB: db}
 
 	routers := []model.RouterExternal{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+		{SSID: "1010"},
+		{SSID: "2020"},
 	}
 	rec := sendTestRequestToHandler(defaultTestSnifferMAC, routers, routerAPI.CreateRouters, http.MethodPost)
 	assert.Equal(s.T(), http.StatusInternalServerError, rec.Code)
@@ -129,16 +129,16 @@ func (s *RouterAPISuite) TestCreateRoutersWithFailingDB() {
 
 func (s *RouterAPISuite) TestGetRouters() {
 	routers := []model.Router{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010", SnifferMAC: defaultTestSnifferMAC},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020", SnifferMAC: defaultTestSnifferMAC},
+		{SSID: "1010", SnifferMAC: defaultTestSnifferMAC},
+		{SSID: "2020", SnifferMAC: defaultTestSnifferMAC},
 	}
 	db := createMockRouterDB(routers)
 	routerAPI := RouterAPI{DB: db}
 	rec := sendTestRequestToHandler(defaultTestSnifferMAC, nil, routerAPI.GetRouters, http.MethodGet)
 
 	expectedRouters := []model.RouterExternal{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+		{SSID: "1010"},
+		{SSID: "2020"},
 	}
 
 	assert.Equal(s.T(), http.StatusOK, rec.Code)
@@ -153,8 +153,8 @@ func (s *RouterAPISuite) TestGetRoutersWithInvalidSnifferMACParam() {
 	routerAPI := RouterAPI{DB: db}
 
 	routers := []model.RouterExternal{
-		{MAC: "00:FF:00:FF:AA:CC", SSID: "1010"},
-		{MAC: "CC:FF:AA:EE:FF:FF", SSID: "2020"},
+		{SSID: "1010"},
+		{SSID: "2020"},
 	}
 
 	rec := sendTestRequestToHandlerWithInvalidParam(routers, routerAPI.GetRouters)

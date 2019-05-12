@@ -74,7 +74,18 @@ func (i *InMemoryDB) UpdateSniffer(sniffer *model.Sniffer) error {
 }
 
 func (i *InMemoryDB) CreateRouter(router *model.Router) error {
-	i.Routers = append(i.Routers, *router)
+	updated := false
+	for index := range i.Routers {
+		if i.Routers[index].SSID == router.SSID && i.Routers[index].SnifferMAC == router.SnifferMAC {
+			i.Routers[index].LastSeen = router.LastSeen
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		i.Routers = append(i.Routers, *router)
+	}
 	return nil
 }
 
