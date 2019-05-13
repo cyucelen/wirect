@@ -135,7 +135,7 @@ func (s *InMemoryDBSuite) TestGetUniqueMACCountBySnifferBetweenDates() {
 }
 
 func (s *InMemoryDBSuite) TestCreateSniffer() {
-	expectedSniffer := model.Sniffer{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Location: "lab"}
+	expectedSniffer := model.Sniffer{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Description: "lab"}
 	s.db.CreateSniffer(&expectedSniffer)
 	actualSniffer := s.db.Sniffers[0]
 	assert.Equal(s.T(), expectedSniffer, actualSniffer)
@@ -143,8 +143,8 @@ func (s *InMemoryDBSuite) TestCreateSniffer() {
 
 func (s *InMemoryDBSuite) TestGetSniffers() {
 	expectedSniffers := []model.Sniffer{
-		{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Location: "lab"},
-		{MAC: "AA:AA:DD:AA:BB:CC", Name: "room_sniffer", Location: "room"},
+		{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Description: "lab"},
+		{MAC: "AA:AA:DD:AA:BB:CC", Name: "room_sniffer", Description: "room"},
 	}
 
 	for _, sniffer := range expectedSniffers {
@@ -157,8 +157,8 @@ func (s *InMemoryDBSuite) TestGetSniffers() {
 
 func (s *InMemoryDBSuite) TestUpdateSniffer() {
 	sniffers := []model.Sniffer{
-		{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Location: "lab"},
-		{MAC: "AA:AA:DD:AA:BB:CC", Name: "room_sniffer", Location: "room"},
+		{MAC: "AA:AA:AA:BB:CC:DD", Name: "lab_sniffer", Description: "lab"},
+		{MAC: "AA:AA:DD:AA:BB:CC", Name: "room_sniffer", Description: "room"},
 	}
 
 	for _, sniffer := range sniffers {
@@ -166,9 +166,9 @@ func (s *InMemoryDBSuite) TestUpdateSniffer() {
 	}
 
 	snifferUpdate := model.Sniffer{
-		MAC:      "AA:AA:AA:BB:CC:DD",
-		Name:     "lib_sniffer",
-		Location: "library",
+		MAC:         "AA:AA:AA:BB:CC:DD",
+		Name:        "lib_sniffer",
+		Description: "library",
 	}
 
 	s.db.UpdateSniffer(&snifferUpdate)
@@ -190,7 +190,7 @@ func (s *InMemoryDBSuite) TestCreateRouter() {
 
 func (s *InMemoryDBSuite) TestGetRoutersBySniffer() {
 	snifferMAC := "AA:AA:AA:BB:CC:DD"
-	sniffer := model.Sniffer{MAC: snifferMAC, Name: "lab_sniffer", Location: "lab"}
+	sniffer := model.Sniffer{MAC: snifferMAC, Name: "lab_sniffer", Description: "lab"}
 	s.db.CreateSniffer(&sniffer)
 
 	router := model.Router{SSID: "2020", SnifferMAC: snifferMAC}

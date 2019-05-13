@@ -145,8 +145,8 @@ func createTwoSniffers(s *DatabaseSuite, s1, s2 string) []model.Sniffer {
 	s.db.DB.Delete(model.Sniffer{})
 
 	sniffers := []model.Sniffer{
-		{MAC: s1, Name: "library_sniffer", Location: "library"},
-		{MAC: s2, Name: "copy_center_sniffer", Location: "copy_center"},
+		{MAC: s1, Name: "library_sniffer", Description: "library"},
+		{MAC: s2, Name: "copy_center_sniffer", Description: "copy_center"},
 	}
 	for _, sniffer := range sniffers {
 		s.db.DB.Create(&sniffer)

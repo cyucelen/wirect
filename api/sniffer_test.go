@@ -32,7 +32,7 @@ func TestCreateSniffer(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	expectedSniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Location: "library"}
+	expectedSniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Description: "library"}
 
 	rec := sendTestRequestToHandler("", expectedSniffer, snifferAPI.CreateSniffer, http.MethodPost)
 	assert.Equal(t, http.StatusCreated, rec.Code)
@@ -64,7 +64,7 @@ func TestCreateSnifferWithFailingDB(t *testing.T) {
 	mockSnifferDB := createFailingMockSnifferDB()
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	sniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Location: "library"}
+	sniffer := model.Sniffer{MAC: "11:22:33:44:55:66", Name: "lib_sniffer", Description: "library"}
 
 	rec := sendTestRequestToHandler("", sniffer, snifferAPI.CreateSniffer, http.MethodPost)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -72,8 +72,8 @@ func TestCreateSnifferWithFailingDB(t *testing.T) {
 
 func TestGetSniffers(t *testing.T) {
 	expectedSniffers := []model.Sniffer{
-		{MAC: "AA:BB:CC:DD:EE:FF", Name: "lib_sniffer", Location: "library"},
-		{MAC: "11:22:33:44:55:66", Name: "copy_sniffer", Location: "copy_center"},
+		{MAC: "AA:BB:CC:DD:EE:FF", Name: "lib_sniffer", Description: "library"},
+		{MAC: "11:22:33:44:55:66", Name: "copy_sniffer", Description: "copy_center"},
 	}
 	mockSnifferDB := createMockSnifferDB(expectedSniffers)
 	snifferAPI := &SnifferAPI{mockSnifferDB}
@@ -88,7 +88,7 @@ func TestUpdateSniffer(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Description: "room"}
 	snifferMAC := "11:22:33:44:55:66"
 
 	rec := sendTestRequestToHandler(snifferMAC, snifferUpdate, snifferAPI.UpdateSniffer, http.MethodPut)
@@ -103,7 +103,7 @@ func TestUpdateSnifferWithInvalidSnifferMACParam(t *testing.T) {
 	mockSnifferDB := createMockSnifferDB([]model.Sniffer{})
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Description: "room"}
 	rec := sendTestRequestToHandlerWithInvalidParam(snifferUpdate, snifferAPI.UpdateSniffer)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
@@ -130,7 +130,7 @@ func TestUpdateWithFailingDBUpdate(t *testing.T) {
 	mockSnifferDB := createFailingMockSnifferDB()
 	snifferAPI := &SnifferAPI{mockSnifferDB}
 
-	snifferUpdate := model.Sniffer{Name: "room_sniffer", Location: "room"}
+	snifferUpdate := model.Sniffer{Name: "room_sniffer", Description: "room"}
 	snifferMAC := "11:22:33:44:55:66"
 
 	rec := sendTestRequestToHandler(snifferMAC, snifferUpdate, snifferAPI.UpdateSniffer, http.MethodPut)

@@ -55,37 +55,37 @@ func (s *IntegrationSuite) setCurrentTime(time time.Time) {
 }
 
 func (s *IntegrationSuite) TestCreateSniffer() {
-	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
-	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","location":"room"}`
+	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","description":"room"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	actualSniffers := s.sendGetSniffersRequest()
 	expectedSniffers := []model.Sniffer{
-		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Location: "library"},
-		{MAC: "02:02:02:02:02:02", Name: "room_sniffer", Location: "room"},
+		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Description: "library"},
+		{MAC: "02:02:02:02:02:02", Name: "room_sniffer", Description: "room"},
 	}
 
 	assert.Equal(s.T(), expectedSniffers, actualSniffers)
 }
 
 func (s *IntegrationSuite) TestUpdateSniffer() {
-	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"00:11:22:33:44:55","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
-	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","location":"room"}`
+	snifferPayload = `{"MAC":"02:02:02:02:02:02","name":"room_sniffer","description":"room"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	newName := "copy_center_sniffer"
-	newLocation := "copy_center"
-	bodyTemplate := `{"name":"%s","location":"%s"}`
-	s.sendUpdateSnifferRequest("02:02:02:02:02:02", fmt.Sprintf(bodyTemplate, newName, newLocation))
+	newdescription := "copy_center"
+	bodyTemplate := `{"name":"%s","description":"%s"}`
+	s.sendUpdateSnifferRequest("02:02:02:02:02:02", fmt.Sprintf(bodyTemplate, newName, newdescription))
 
 	actualSniffers := s.sendGetSniffersRequest()
 	expectedSniffers := []model.Sniffer{
-		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Location: "library"},
-		{MAC: "02:02:02:02:02:02", Name: newName, Location: newLocation},
+		{MAC: "00:11:22:33:44:55", Name: "library_sniffer", Description: "library"},
+		{MAC: "02:02:02:02:02:02", Name: newName, Description: newdescription},
 	}
 
 	assert.Equal(s.T(), expectedSniffers, actualSniffers)
@@ -93,7 +93,7 @@ func (s *IntegrationSuite) TestUpdateSniffer() {
 
 func (s *IntegrationSuite) TestGetCurrentCrowd() {
 	snifferMAC := "01:01:01:01:01:01"
-	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	now := s.clock.Now()
@@ -132,7 +132,7 @@ func (s *IntegrationSuite) TestGetCurrentCrowd() {
 
 func (s *IntegrationSuite) TestGetCrowdBetweenDates() {
 	snifferMAC := "01:01:01:01:01:01"
-	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	now := s.clock.Now()
@@ -161,7 +161,7 @@ func (s *IntegrationSuite) TestGetCrowdBetweenDates() {
 
 func (s *IntegrationSuite) TestGetTotalSniffedMACDaily() {
 	snifferMAC := "01:01:01:01:01:01"
-	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	now := s.clock.Now()
@@ -187,7 +187,7 @@ func (s *IntegrationSuite) TestGetTotalSniffedMACDaily() {
 
 func (s *IntegrationSuite) TestGetRouters() {
 	snifferMAC := "01:01:01:01:01:01"
-	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","location":"library"}`
+	snifferPayload := `{"MAC":"` + snifferMAC + `","name":"library_sniffer","description":"library"}`
 	s.sendCreateSnifferRequest(snifferPayload)
 
 	routers := []model.RouterExternal{
