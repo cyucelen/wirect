@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/cyucelen/wirect/model"
-	"github.com/go-ffmt/ffmt"
 	"github.com/labstack/echo"
 )
 
@@ -23,8 +22,6 @@ func (r *RouterAPI) CreateRouters(ctx echo.Context) error {
 		ctx.JSON(http.StatusBadRequest, "")
 		return err
 	}
-
-	ffmt.Puts(routers)
 
 	snifferMAC, err := getSnifferMAC(ctx)
 	if err != nil {
