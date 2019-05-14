@@ -96,7 +96,20 @@ func (i *InMemoryDB) GetRoutersBySniffer(snifferMAC string) []model.Router {
 			filteredRouters = append(filteredRouters, router)
 		}
 	}
-	return filteredRouters
+	return sortRoutersByLastSeen(filteredRouters)
+}
+
+func sortRoutersByLastSeen(s []model.Router) []model.Router {
+	sc := make([]model.Router, len(s))
+	copy(sc, s)
+
+	sort.Slice(sc, func(i int, j int) bool {
+		if sc[i].LastSeen > sc[j].LastSeen {
+			return true
+		}
+		return false
+	})
+	return sc
 }
 
 func sortByPacketsTime(s []model.Packet) []model.Packet {
@@ -104,7 +117,7 @@ func sortByPacketsTime(s []model.Packet) []model.Packet {
 	copy(sc, s)
 
 	sort.Slice(sc, func(i int, j int) bool {
-		if s[i].Timestamp < s[j].Timestamp {
+		if sc[i].Timestamp < sc[j].Timestamp {
 			return true
 		}
 		return false

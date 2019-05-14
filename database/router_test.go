@@ -18,16 +18,23 @@ func (s *DatabaseSuite) TestCreateRouter() {
 func (s *DatabaseSuite) TestGetRoutersBySniffer() {
 	snifferMAC := "00:00:00:00:00:00"
 	routers := []model.Router{
-		{SSID: "2020", SnifferMAC: snifferMAC},
-		{SSID: "1010", SnifferMAC: snifferMAC},
-		{SSID: "Arch", SnifferMAC: snifferMAC},
-		{SSID: "dont h@ck m3", SnifferMAC: snifferMAC},
+		{SSID: "2020", SnifferMAC: snifferMAC, LastSeen: 1000},
+		{SSID: "1010", SnifferMAC: snifferMAC, LastSeen: 1200},
+		{SSID: "Arch", SnifferMAC: snifferMAC, LastSeen: 800},
+		{SSID: "dont h@ck m3", SnifferMAC: snifferMAC, LastSeen: 1500},
 	}
 
 	for _, router := range routers {
 		s.db.CreateRouter(&router)
 	}
 
+	expectedRouters := []model.Router{
+		{SSID: "dont h@ck m3", SnifferMAC: snifferMAC, LastSeen: 1500},
+		{SSID: "1010", SnifferMAC: snifferMAC, LastSeen: 1200},
+		{SSID: "2020", SnifferMAC: snifferMAC, LastSeen: 1000},
+		{SSID: "Arch", SnifferMAC: snifferMAC, LastSeen: 800},
+	}
+
 	actualRouters := s.db.GetRoutersBySniffer(snifferMAC)
-	assert.Equal(s.T(), routers, actualRouters)
+	assert.Equal(s.T(), expectedRouters, actualRouters)
 }

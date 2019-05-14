@@ -193,8 +193,20 @@ func (s *InMemoryDBSuite) TestGetRoutersBySniffer() {
 	sniffer := model.Sniffer{MAC: snifferMAC, Name: "lab_sniffer", Description: "lab"}
 	s.db.CreateSniffer(&sniffer)
 
-	router := model.Router{SSID: "2020", SnifferMAC: snifferMAC}
+	router := model.Router{SSID: "2020", SnifferMAC: snifferMAC, LastSeen: 1000}
 	s.db.CreateRouter(&router)
 
-	assert.Equal(s.T(), router, s.db.GetRoutersBySniffer(snifferMAC)[0])
+	router = model.Router{SSID: "1010", SnifferMAC: snifferMAC, LastSeen: 1500}
+	s.db.CreateRouter(&router)
+
+	router = model.Router{SSID: "canawar", SnifferMAC: snifferMAC, LastSeen: 1200}
+	s.db.CreateRouter(&router)
+
+	expectedRouters := []model.Router{
+		{SSID: "1010", SnifferMAC: snifferMAC, LastSeen: 1500},
+		{SSID: "canawar", SnifferMAC: snifferMAC, LastSeen: 1200},
+		{SSID: "2020", SnifferMAC: snifferMAC, LastSeen: 1000},
+	}
+
+	assert.Equal(s.T(), expectedRouters, s.db.GetRoutersBySniffer(snifferMAC))
 }

@@ -198,8 +198,13 @@ func (s *IntegrationSuite) TestGetRouters() {
 	routersJSON, _ := json.Marshal(routers)
 	s.sendCreateRoutersRequest(snifferMAC, string(routersJSON))
 
+	expectedRouters := []model.RouterExternal{
+		{SSID: "1010", LastSeen: 2000},
+		{SSID: "2020", LastSeen: 1500},
+	}
+
 	actualRouters := s.sendGetRoutersRequest(snifferMAC)
-	assert.Equal(s.T(), routers, actualRouters)
+	assert.Equal(s.T(), expectedRouters, actualRouters)
 }
 
 func (s *IntegrationSuite) TestGetTime() {
